@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # Redis - Message Queue (for Gateway → Worker communication)
+  # Redis - Message Queue
   redis:
     image: redis:7-alpine
     container_name: travel-ai-redis
@@ -9,8 +9,13 @@ services:
       - "6379:6379"
     networks:
       - travel-ai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # PostgreSQL - Main Database (stores threads, messages)
+  # PostgreSQL - Main Database
   postgres:
     image: postgres:15-alpine
     container_name: travel-ai-postgres
@@ -24,8 +29,29 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - travel-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
-  # We'll add gateway, worker, db-service later
+  # DB Service - Database Access Layer
+  db-service:
+    build: ./db-service
+    container_name: travel-ai-db
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/travel_ai
+      - SERVICE_PORT=8001
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - travel-ai-network
+    volumes:
+      - ./db-service:/app
 
 networks:
   travel-ai-network:
