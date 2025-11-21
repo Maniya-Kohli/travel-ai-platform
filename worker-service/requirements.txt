@@ -1,0 +1,14 @@
+# Framework, async/queue, and integration
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+httpx==0.25.0
+redis==5.0.1
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# LangChain (for LLM/memory integration)
+langchain==0.1.13
+openai==1.2.3
+
+# Utilities
+python-dotenv==1.0.0
