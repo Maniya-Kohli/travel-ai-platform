@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  # Redis - Message Queue (for Gateway → Worker communication)
+  redis:
+    image: redis:7-alpine
+    container_name: travel-ai-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - travel-ai-network
+
+  # PostgreSQL - Main Database (stores threads, messages)
+  postgres:
+    image: postgres:15-alpine
+    container_name: travel-ai-postgres
+    environment:
+      POSTGRES_DB: travel_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - travel-ai-network
+
+  # We'll add gateway, worker, db-service later
+
+networks:
+  travel-ai-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
