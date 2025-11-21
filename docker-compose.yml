@@ -15,6 +15,24 @@ services:
       timeout: 3s
       retries: 5
 
+    # Worker Service - Background Processor
+  worker-service:
+    build: ./worker-service
+    container_name: travel-ai-worker
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DB_SERVICE_URL=http://db-service:8001
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      db-service:
+        condition: service_started
+    networks:
+      - travel-ai-network
+    # volumes:
+    #   - ./worker-service:/app
+
   # PostgreSQL - Main Database
   postgres:
     image: postgres:15-alpine
@@ -52,6 +70,23 @@ services:
       - travel-ai-network
     volumes:
       - ./db-service:/app
+
+  #gateway service
+  gateway-service:
+    build: ./gateway-service
+    container_name: travel-ai-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - SERVICE_PORT=8000
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    depends_on:
+      - redis
+    networks:
+      - travel-ai-network
+    # volumes:
+    #   - ./gateway-service:/app  # remove/comment for prod (dev only)
 
 networks:
   travel-ai-network:
