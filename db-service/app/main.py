@@ -6,7 +6,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db
-from app.routes import health, thread_routes, message_routes
+from app.routes.health import router as health
+from app.routes.thread_routes import router as thread_routes
+from app.routes.message_routes import router as message_routes
+from app.routes.normalised_message_routes import router as normalised_message_routes
+
+
+
 
 settings = get_settings()
 
@@ -28,10 +34,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+
 # Register routes
-app.include_router(health.router)
-app.include_router(thread_routes.router)
-app.include_router(message_routes.router)
+app.include_router(health)
+app.include_router(thread_routes)
+app.include_router(message_routes)
+app.include_router(normalised_message_routes)
 
 
 @app.on_event("startup")

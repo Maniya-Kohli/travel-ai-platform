@@ -45,7 +45,7 @@ def init_db():
     Create all tables
     """
     # Import models so they're registered
-    from app.models import thread, message
+    from app.models import thread, message , normalised_message
     
     # Create tables
     Base.metadata.create_all(bind=engine)

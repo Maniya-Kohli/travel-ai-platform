@@ -2,6 +2,7 @@
 Orchestrator coordinates the workflow:
 Request Handler → Context Manager → Data Retriever → Filter Engine → LLM Module
 """
+import json
 from app.modules.request_handler import RequestHandler
 from app.modules.context_manager import ContextManager
 from app.modules.data_retriever import DataRetriever
@@ -29,11 +30,32 @@ class TripOrchestrator:
         Returns:
             trip_response: Final trip plan
         """
-        print(f"🔄 Processing request: {raw_request.get('request_id')}")
+        print(f"🔄 Processing request: {raw_request} ")
         
         try:
+
+            #Step 0 : Save the chat in message thread
+
+            print("Starting to Save in DB")
+
+            await self.db_client.create_message(
+                thread_id=raw_request.get("thread_id"),
+                role="user",
+                content=raw_request.get("content")
+            )
+
+            print("✓ Message Saved In DB")
+
             # Step 1: Normalize request
             normalized = await self.request_handler.normalize(raw_request)
+            json_ready = normalized.model_dump(mode="json")
+
+            await self.db_client.create_normalised_message(
+                thread_id=normalized.thread_id,
+                role="user",
+                content=json_ready
+            )
+
             print("✓ Request normalized")
 
             # Step 2: Build context (fetches messages from DB)
@@ -61,10 +83,12 @@ class TripOrchestrator:
             # Step 6: Save assistant response to DB
             thread_id = context_pack.get("thread_id")
             if thread_id:
+                json_ready = trip_response.model_dump(mode="json")
+                print(type(json_ready), json_ready)
                 await self.db_client.create_message(
                     thread_id=thread_id,
                     role="assistant",
-                    content=str(trip_response)  # TODO: Format properly
+                    content=json_ready
                 )
                 print("✓ Response saved to DB")
 

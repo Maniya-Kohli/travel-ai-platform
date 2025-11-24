@@ -25,6 +25,7 @@ class DBServiceClient:
         """Create a new conversation thread"""
         response = await self.client.post("/threads")
         response.raise_for_status()
+        print(response.json())
         return response.json()
     
     async def get_thread(self, thread_id: str) -> Dict:
@@ -39,15 +40,14 @@ class DBServiceClient:
         response.raise_for_status()
     
     # Message operations
-    async def create_message(
+    async def create_normalised_message(
         self,
         thread_id: str,
         role: str,
-        content: str
+        content: Dict[str, any]
     ) -> Dict:
-        """Create a new message in a thread"""
         response = await self.client.post(
-            "/messages",
+            "/normalised_messages",
             json={
                 "thread_id": thread_id,
                 "role": role,
@@ -56,6 +56,24 @@ class DBServiceClient:
         )
         response.raise_for_status()
         return response.json()
+    
+    async def create_message(
+        self,
+        thread_id: str,
+        role: str,
+        content: Dict[str, any]
+    ) -> Dict:
+        response = await self.client.post(
+            "/normalised_messages",
+            json={
+                "thread_id": thread_id,
+                "role": role,
+                "content": content
+            }
+        )
+        response.raise_for_status()
+        return response.json()
+
     
     async def get_message(self, message_id: str) -> Dict:
         """Get message by ID"""

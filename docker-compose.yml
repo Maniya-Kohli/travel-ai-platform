@@ -71,6 +71,17 @@ services:
     volumes:
       - ./db-service:/app
 
+  frontend:
+    build: ./frontend
+    container_name: travel-ai-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - travel-ai-network
+    # Uncomment below line for live reload in dev
+    # volumes:
+    #   - ./frontend:/app
+
   #gateway service
   gateway-service:
     build: ./gateway-service
