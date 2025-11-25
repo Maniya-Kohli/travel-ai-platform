@@ -10,10 +10,15 @@ import signal
 from app.config import get_settings
 from app.utils.queue_consumer import QueueConsumer
 from app.orchestrator import TripOrchestrator
+from platform_common.logging_config import init_logging
+import logging
 
 settings = get_settings()
 orchestrator = TripOrchestrator()
 running = True
+
+init_logging("worker-service")
+logger = logging.getLogger(__name__)
 
 
 def handle_shutdown(signum, frame):

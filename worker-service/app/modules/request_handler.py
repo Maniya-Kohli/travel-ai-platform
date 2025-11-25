@@ -1,6 +1,5 @@
 # app/modules/request_handler.py
 from datetime import datetime, date
-import json
 from typing import Any, Dict, Optional
 
 from pydantic import ValidationError
@@ -26,7 +25,6 @@ def _compute_days(start_d: Optional[date], end_d: Optional[date]) -> Optional[in
     delta = (end_d - start_d).days
     return max(1, delta)  # clamp at least 1 day
 
-
 def _season_hint(m: int) -> str:
     if m in (12, 1, 2):
         return "WINTER"
@@ -43,8 +41,11 @@ class RequestHandler:
     """
 
     async def normalize(self, raw_request: Dict[str, Any]) -> Dict[str, Any]:
+        print('RAW REQUEST', raw_request)
 
-        print('RAW REQUEST' , raw_request)
+        # ---- PATCH: Accept 'constraints' as alias for 'user_filters' ----
+        if "constraints" in raw_request and "user_filters" not in raw_request:
+            raw_request["user_filters"] = raw_request.pop("constraints")
 
         # 1) Parse raw request (tolerant of missing fields)
         try:
@@ -88,7 +89,6 @@ class RequestHandler:
             out_of_scope=out_of_scope,
             original_destination=orig_dest,
         )
-
 
         # 4) Constraints + defaults
         uf = raw.user_filters or None

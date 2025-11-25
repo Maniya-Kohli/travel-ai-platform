@@ -15,9 +15,11 @@ services:
       timeout: 3s
       retries: 5
 
-    # Worker Service - Background Processor
+  # Worker Service - Background Processor
   worker-service:
-    build: ./worker-service
+    build:
+      context: . # monorepo root
+      dockerfile: worker-service/Dockerfile
     container_name: travel-ai-worker
     environment:
       - REDIS_URL=redis://redis:6379
@@ -30,8 +32,12 @@ services:
         condition: service_started
     networks:
       - travel-ai-network
+    ports:
+      - "8002:8002" # 👈 expose worker HTTP API
+    # Dev-only live reload (optional):
     # volumes:
-    #   - ./worker-service:/app
+    #   - ./worker-service/app:/app/app
+    #   - ./platform_common:/app/platform_common
 
   # PostgreSQL - Main Database
   postgres:
@@ -55,7 +61,9 @@ services:
 
   # DB Service - Database Access Layer
   db-service:
-    build: ./db-service
+    build:
+      context: . # monorepo root
+      dockerfile: db-service/Dockerfile
     container_name: travel-ai-db
     ports:
       - "8001:8001"
@@ -63,14 +71,19 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/travel_ai
       - SERVICE_PORT=8001
       - ENVIRONMENT=development
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - VECTOR_PERSIST_DIR=/data/chroma
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - travel-ai-network
-    volumes:
-      - ./db-service:/app
+    # Dev-only live reload (optional):
+    # volumes:
+    #   - ./db-service/app:/app/app
+    #   - ./platform_common:/app/platform_common
 
+  # Frontend
   frontend:
     build: ./frontend
     container_name: travel-ai-frontend
@@ -82,9 +95,11 @@ services:
     # volumes:
     #   - ./frontend:/app
 
-  #gateway service
+  # Gateway service
   gateway-service:
-    build: ./gateway-service
+    build:
+      context: . # monorepo root
+      dockerfile: gateway-service/Dockerfile
     container_name: travel-ai-gateway
     ports:
       - "8000:8000"
@@ -96,8 +111,10 @@ services:
       - redis
     networks:
       - travel-ai-network
+    # Dev-only live reload (optional):
     # volumes:
-    #   - ./gateway-service:/app  # remove/comment for prod (dev only)
+    #   - ./gateway-service/app:/app/app
+    #   - ./platform_common:/app/platform_common
 
 networks:
   travel-ai-network:

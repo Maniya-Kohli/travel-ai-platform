@@ -69,3 +69,33 @@ async def get_thread_messages(thread_id: str, skip: int = 0, limit: int = 100, d
         )
         for msg in messages
     ]
+
+
+@router.get("", response_model=List[MessageResponse])
+async def list_messages(
+    thread_id: str = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all messages. Optionally filter by thread_id. Supports pagination.
+    """
+    repo = MessageRepository(db)
+    if thread_id:
+        messages = repo.get_by_thread(thread_id, skip=skip, limit=limit)
+    else:
+        messages = repo.get_all()
+    return [
+        MessageResponse(
+            id=m.id,
+            thread_id=m.thread_id,
+            role=m.role,
+            content=m.content,
+            created_at=m.created_at.isoformat()
+        )
+        for m in messages
+    ]
+
+
+

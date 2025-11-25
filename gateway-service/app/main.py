@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routes import health, trip_request
+from platform_common.logging_config import init_logging
+import logging
 
 settings = get_settings()
 
@@ -11,6 +13,11 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs"
 )
+
+
+init_logging("gateway-service")
+logger = logging.getLogger(__name__)
+
 
 app.add_middleware(
     CORSMiddleware,

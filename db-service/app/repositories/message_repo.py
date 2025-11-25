@@ -38,3 +38,12 @@ class MessageRepository:
             self.db.commit()
             return True
         return False
+
+    def get_all(self, skip: int = 0, limit: int = 100) -> list[Message]:
+        return (
+            self.db.query(Message)
+            .order_by(Message.created_at)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )

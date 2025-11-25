@@ -30,21 +30,9 @@ class TripOrchestrator:
         Returns:
             trip_response: Final trip plan
         """
-        print(f"🔄 Processing request: {raw_request} ")
+        print(f"🔄 Worker service : Processing request: {raw_request} ")
         
         try:
-
-            #Step 0 : Save the chat in message thread
-
-            print("Starting to Save in DB")
-
-            await self.db_client.create_message(
-                thread_id=raw_request.get("thread_id"),
-                role="user",
-                content=raw_request.get("content")
-            )
-
-            print("✓ Message Saved In DB")
 
             # Step 1: Normalize request
             normalized = await self.request_handler.normalize(raw_request)
@@ -52,7 +40,7 @@ class TripOrchestrator:
 
             await self.db_client.create_normalised_message(
                 thread_id=normalized.thread_id,
-                role="user",
+                message_id  = normalized.message_id , 
                 content=json_ready
             )
 

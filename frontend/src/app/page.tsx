@@ -93,6 +93,37 @@ export default function HomePage() {
         }),
       });
       if (!saveMessageRes.ok) throw new Error("Failed to save message");
+      const savedMessage = await saveMessageRes.json();
+      console.log("✓ Message Saved In DB", savedMessage);
+
+      // 2. Send constraints/filters to /trip/plan agent endpoint
+      const requestBody = {
+        request_id: "frontend-" + Date.now(),
+        thread_id: threadId,
+        message_id: savedMessage.id,
+        constraints: filters,
+        content: input,
+      };
+      const res = await fetch("http://localhost:8000/trip/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      if (!res.ok) throw new Error("Failed trip plan");
+
+      const data = await res.json();
+      setChat((prev) => [
+        ...prev,
+        {
+          sender: "assistant",
+          text:
+            typeof data === "string"
+              ? data
+              : typeof data.text === "string"
+                ? data.text
+                : JSON.stringify(data),
+        },
+      ]);
     } catch (err) {
       setChat((prev) => [
         ...prev,

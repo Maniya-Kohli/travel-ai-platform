@@ -10,18 +10,17 @@ import uuid
 from sqlalchemy.dialects.postgresql import JSONB
 
 
-
 class Normalised_Message(Base):
-    
     __tablename__ = "normalised_message"
-    
-    # Columns
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    thread_id = Column(String, ForeignKey("threads.id"), nullable=False)
-    role = Column(String, nullable=False)  # 'user' or 'assistant'
+
+    # Shared PK/FK with messages.id
+    message_id = Column(String, ForeignKey("messages.id"), primary_key=True)
+    thread_id = Column(String, nullable=False)  
     content = Column(JSONB, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
-    
+
+    # Relationships
+    message = relationship("Message", back_populates="normalised_message")
+
     def __repr__(self):
-        return f"<Message(id={self.id}, role={self.role})>"
+        return f"<Normalised_Message(message_id={self.message_id}>"
