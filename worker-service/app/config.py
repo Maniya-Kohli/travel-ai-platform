@@ -6,7 +6,6 @@ from typing import ClassVar, Set, Dict
 class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
     DB_SERVICE_URL: str = "http://localhost:8001"
-    OPENAI_API_KEY: str = ""
     ENVIRONMENT: str = "development"
     SERVICE_NAME: str = "worker-service"
 
