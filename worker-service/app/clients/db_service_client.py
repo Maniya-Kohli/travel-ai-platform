@@ -67,7 +67,7 @@ class DBServiceClient:
         content: Dict[str, any]
     ) -> Dict:
         response = await self.client.post(
-            "/normalised_messages",
+            "/messages",
             json={
                 "thread_id": thread_id,
                 "role": role,

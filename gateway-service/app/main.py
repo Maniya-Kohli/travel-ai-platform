@@ -17,6 +17,14 @@ app = FastAPI(
 
 init_logging("gateway-service")
 logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+)
+logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
+# 🔇 quiet noisy libs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING) 
 
 
 app.add_middleware(

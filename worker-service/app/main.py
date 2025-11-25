@@ -20,6 +20,14 @@ running = True
 init_logging("worker-service")
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+)
+
+# 🔇 Quiet noisy libraries
+logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
+
 
 def handle_shutdown(signum, frame):
     """Handle graceful shutdown"""

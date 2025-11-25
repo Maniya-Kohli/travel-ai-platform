@@ -1,7 +1,4 @@
-"""
-Orchestrator coordinates the workflow:
-Request Handler → Context Manager → Data Retriever → Filter Engine → LLM Module
-"""
+# app/modules/trip_orchestrator.py (or wherever this class lives)
 import json
 from app.modules.request_handler import RequestHandler
 from app.modules.context_manager import ContextManager
@@ -23,30 +20,22 @@ class TripOrchestrator:
     async def process_trip_request(self, raw_request):
         """
         Main workflow orchestration
-        
-        Args:
-            raw_request: Raw request from queue
-            
-        Returns:
-            trip_response: Final trip plan
         """
         print(f"🔄 Worker service : Processing request: {raw_request} ")
         
         try:
-
             # Step 1: Normalize request
             normalized = await self.request_handler.normalize(raw_request)
             json_ready = normalized.model_dump(mode="json")
 
             await self.db_client.create_normalised_message(
                 thread_id=normalized.thread_id,
-                message_id  = normalized.message_id , 
-                content=json_ready
+                message_id=normalized.message_id,
+                content=json_ready,
             )
-
             print("✓ Request normalized")
 
-            # Step 2: Build context (fetches messages from DB)
+            # Step 2: Build context (fetches messages from DB + VDB)
             context_pack = await self.context_manager.build_context(normalized)
             print("✓ Context built")
 
@@ -54,39 +43,64 @@ class TripOrchestrator:
             grounded_context = await self.data_retriever.retrieve(context_pack)
             print("✓ Data retrieved")
 
-            # Step 4: Filter candidates
-            candidates_pack = await self.filter_engine.filter_and_rank(
-                grounded_context,
-                context_pack
-            )
-            print("✓ Candidates filtered")
+            # # Step 4: Filter candidates
+            # candidates_pack = await self.filter_engine.filter_and_rank(
+            #     grounded_context,
+            #     context_pack,
+            # )
+            # print("✓ Candidates filtered")
 
             # Step 5: Generate trip plan
             trip_response = await self.llm_module.generate_plan(
-                candidates_pack,
-                context_pack
+                grounded_context,
+                context_pack,
             )
-            print("✓ Trip plan generated")
-            
+            print("✓ Trip plan generated" , trip_response)
+
             # Step 6: Save assistant response to DB
             thread_id = context_pack.get("thread_id")
             if thread_id:
-                json_ready = trip_response.model_dump(mode="json")
-                print(type(json_ready), json_ready)
+                # Handle both Pydantic models and plain dicts
+                if hasattr(trip_response, "model_dump"):
+                    json_ready = trip_response.model_dump(mode="json")
+                else:
+                    json_ready = trip_response  # already a dict / JSON-compatible
+
+                print("Assistant response payload type:", type(json_ready), thread_id , json_ready)
                 await self.db_client.create_message(
                     thread_id=thread_id,
                     role="assistant",
-                    content=json_ready
+                    content=json_ready,
                 )
                 print("✓ Response saved to DB")
 
             return trip_response
-            
+
         except Exception as e:
-            print(f"❌ Error processing request: {e}")
-            # TODO: Save error state to DB
-            raise
-    
+        # 🔴 Persist debug info (very useful!)
+            try:
+                thread_id = raw_request.get("thread_id")
+                debug_payload = {
+                    "type": "orchestrator_error",
+                    "request_id": raw_request.get("request_id"),
+                    "thread_id": thread_id,
+                    "error": str(e),
+                    # be careful to avoid huge blobs; you can trim or summarize:
+                    "context_pack": (context_pack if "context_pack" in locals() else None),
+                    "grounded_context": (
+                        grounded_context if "grounded_context" in locals() else None
+                    ),
+                }
+                if thread_id:
+                    await self.db_client.create_message(
+                        thread_id=thread_id,
+                        role="system",
+                        content=debug_payload,
+                    )
+            except Exception as log_err:
+                print("⚠️ Failed to store debug info:", log_err)
+                raise
+
     async def close(self):
         """Cleanup resources"""
         await self.context_manager.close()

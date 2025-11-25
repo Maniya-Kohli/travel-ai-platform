@@ -1,8 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 
-type ChatMessage = { sender: "user" | "assistant"; text: string };
-
 type Filters = {
   trip_types?: string[];
   difficulty?: string;
@@ -20,19 +18,140 @@ type Filters = {
   amenities?: string[];
   [key: string]: any;
 };
+type TripPlan = {
+  type: "trip_plan";
+  version: string;
+  thread_id: string;
+  message_id: string;
+  days: number;
+  destination: string | null;
+  difficulty: string | null;
+  trip_types: string[];
+  budget_band: string | null;
+  weather_hint?: string | null;
+  lodging?: any;
+  window_summary?: string | null;
+  itinerary: {
+    day: number;
+    title: string;
+    activities: any[];
+    highlights: string[];
+  }[];
+};
+
+type ChatMessage =
+  | { sender: "user"; kind: "text"; text: string }
+  | { sender: "assistant"; kind: "text"; text: string }
+  | { sender: "assistant"; kind: "trip_plan"; plan: TripPlan };
+
+function TripPlanView({ plan }: { plan: TripPlan }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Header */}
+      <div
+        style={{
+          marginBottom: 6,
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          paddingBottom: 8,
+        }}
+      >
+        <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
+          🗺️ Trip plan for {plan.destination || "your destination"}
+        </div>
+        <div style={{ fontSize: ".9rem", opacity: 0.8, marginTop: 4 }}>
+          {plan.days} days • {plan.trip_types?.join(", ") || "Trip"} •{" "}
+          {plan.difficulty || "Any difficulty"} •{" "}
+          {plan.budget_band || "Any budget"}
+        </div>
+        {plan.window_summary && (
+          <div
+            style={{
+              fontSize: ".85rem",
+              opacity: 0.8,
+              marginTop: 4,
+            }}
+          >
+            {plan.window_summary}
+          </div>
+        )}
+      </div>
+
+      {/* Itinerary */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {plan.itinerary.map((day) => (
+          <div
+            key={day.day}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <div
+              style={{
+                fontWeight: 550,
+                marginBottom: 4,
+                fontSize: ".98rem",
+              }}
+            >
+              Day {day.day}: {day.title}
+            </div>
+
+            {day.highlights?.length > 0 && (
+              <div style={{ fontSize: ".88rem", opacity: 0.9 }}>
+                <div style={{ marginBottom: 2 }}>Highlights:</div>
+                <ul
+                  style={{
+                    margin: 0,
+                    paddingLeft: "1.1rem",
+                    marginTop: 2,
+                  }}
+                >
+                  {day.highlights.map((h, idx) => (
+                    <li key={idx}>{h}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {day.activities?.length > 0 && (
+              <div
+                style={{
+                  fontSize: ".86rem",
+                  opacity: 0.85,
+                  marginTop: 4,
+                }}
+              >
+                {/* placeholder until you model activities better */}
+                {day.activities.length} activities planned
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [filters, setFilters] = useState<Filters>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // network for send
+  const [waitingForReply, setWaitingForReply] = useState(false); // worker in progress
+  const [latestAssistantId, setLatestAssistantId] = useState<string | null>(
+    null
+  );
+
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat, loading]);
+  }, [chat, loading, waitingForReply]);
 
+  // ---- Thread bootstrapping ----
   useEffect(() => {
     const validateAndSetThreadId = async () => {
       const savedId =
@@ -51,7 +170,10 @@ export default function HomePage() {
             localStorage.removeItem("thread_id");
           }
         } catch (err) {
-          // fallback to new thread
+          console.warn(
+            "Failed to validate saved thread, creating new one",
+            err
+          );
         }
       }
       const res = await fetch("http://localhost:8001/threads", {
@@ -67,6 +189,8 @@ export default function HomePage() {
   const handleNewChat = async () => {
     setChat([]);
     setThreadId(null);
+    setLatestAssistantId(null);
+    setWaitingForReply(false);
     localStorage.removeItem("thread_id");
     const res = await fetch("http://localhost:8001/threads", {
       method: "POST",
@@ -76,13 +200,93 @@ export default function HomePage() {
     localStorage.setItem("thread_id", data.id);
   };
 
-  //---- SEND MESSAGE WITH FILTERS AND CHAT HISTORY ----
+  // ---- Poll /trip/latest for assistant reply ----
+  useEffect(() => {
+    if (!threadId || !waitingForReply) return;
+
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const res = await fetch(
+          `http://localhost:8000/trip/latest?thread_id=${threadId}`
+        );
+        const data = await res.json();
+        console.log("Polling /trip/latest:", data);
+
+        if (cancelled) return;
+
+        if (data.status === "ok" && data.message) {
+          const msg = data.message;
+          const msgId: string | undefined = msg.id ?? msg.message_id;
+
+          if (msgId && msgId !== latestAssistantId) {
+            const content = msg.content;
+
+            // 1) If it's a structured trip plan, store as such
+            if (
+              content &&
+              typeof content === "object" &&
+              (content as any).type === "trip_plan"
+            ) {
+              setChat((prev) => [
+                ...prev,
+                {
+                  sender: "assistant",
+                  kind: "trip_plan",
+                  plan: content as TripPlan,
+                },
+              ]);
+            } else {
+              // 2) Fallback: plain text assistant message
+              let text: string;
+              if (typeof content === "string") {
+                text = content;
+              } else if (content && typeof content.text === "string") {
+                text = content.text;
+              } else {
+                text = JSON.stringify(content ?? msg);
+              }
+
+              setChat((prev) => [
+                ...prev,
+                { sender: "assistant", kind: "text", text },
+              ]);
+            }
+
+            setLatestAssistantId(msgId);
+            setWaitingForReply(false);
+            return;
+          }
+        }
+
+        // No new assistant message yet → poll again
+        setTimeout(poll, 1500);
+      } catch (err) {
+        console.error("Error polling latest reply", err);
+        // backoff a bit longer on errors
+        setTimeout(poll, 3000);
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId, waitingForReply, latestAssistantId]);
+
+  //---- SEND MESSAGE WITH FILTERS ----
   const sendMessage = async () => {
     if (!input.trim() || loading || !threadId) return;
-    setChat((prev) => [...prev, { sender: "user", text: input }]);
+
+    // Show user message immediately
+    setChat((prev) => [...prev, { sender: "user", kind: "text", text: input }]);
     setLoading(true);
+
     try {
-      // 1. Save message in /messages (chat DB)
+      // 1. Save message in /messages (DB service)
       const saveMessageRes = await fetch("http://localhost:8001/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,7 +300,7 @@ export default function HomePage() {
       const savedMessage = await saveMessageRes.json();
       console.log("✓ Message Saved In DB", savedMessage);
 
-      // 2. Send constraints/filters to /trip/plan agent endpoint
+      // 2. Send job to /trip/plan (gateway → worker)
       const requestBody = {
         request_id: "frontend-" + Date.now(),
         thread_id: threadId,
@@ -109,27 +313,21 @@ export default function HomePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
-      if (!res.ok) throw new Error("Failed trip plan");
+      if (!res.ok) throw new Error("Failed trip plan enqueue");
 
       const data = await res.json();
-      setChat((prev) => [
-        ...prev,
-        {
-          sender: "assistant",
-          text:
-            typeof data === "string"
-              ? data
-              : typeof data.text === "string"
-                ? data.text
-                : JSON.stringify(data),
-        },
-      ]);
+      console.log("Enqueued trip plan:", data);
+
+      // Now we wait for the worker to process → polling loop will pick it up
+      setWaitingForReply(true);
     } catch (err) {
+      console.error("Error in sendMessage:", err);
       setChat((prev) => [
         ...prev,
-        { sender: "assistant", text: "Error contacting server." },
+        { sender: "assistant", kind: "text", text: "Error contacting server." },
       ]);
     }
+
     setInput("");
     setLoading(false);
   };
@@ -270,13 +468,14 @@ export default function HomePage() {
             type="number"
             min={1}
             max={30}
-            value={filters.duration_days || ""}
-            onChange={(e) =>
+            value={filters.duration_days ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
               setFilters((f) => ({
                 ...f,
-                duration_days: Number(e.target.value) || "",
-              }))
-            }
+                duration_days: value ? Number(value) : undefined,
+              }));
+            }}
             style={{
               width: "75%",
               padding: "7px",
@@ -351,6 +550,7 @@ export default function HomePage() {
             </label>
           ))}
         </div>
+
         {/* Accommodation */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -384,6 +584,7 @@ export default function HomePage() {
             </label>
           ))}
         </div>
+
         {/* Accessibility */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -417,6 +618,7 @@ export default function HomePage() {
             </label>
           ))}
         </div>
+
         {/* Meal preferences */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -450,6 +652,7 @@ export default function HomePage() {
             </label>
           ))}
         </div>
+
         {/* Must Include / Must Exclude */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -504,6 +707,7 @@ export default function HomePage() {
             }}
           />
         </div>
+
         {/* Interest Tags */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -532,6 +736,7 @@ export default function HomePage() {
             }}
           />
         </div>
+
         {/* Events only */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ fontWeight: 500, color: "#cdcddc" }}>
@@ -546,6 +751,7 @@ export default function HomePage() {
             Events Only
           </label>
         </div>
+
         {/* Amenities */}
         <div style={{ marginBottom: 18 }}>
           <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
@@ -624,6 +830,7 @@ export default function HomePage() {
             New Chat
           </button>
         </div>
+
         <div
           style={{
             flex: 1,
@@ -650,7 +857,7 @@ export default function HomePage() {
                   color: msg.sender === "user" ? "#fff" : "#e9eaf0",
                   borderRadius: 15,
                   padding: "14px 22px",
-                  fontSize: "1.08rem",
+                  fontSize: "1.02rem",
                   whiteSpace: "pre-wrap",
                   boxShadow:
                     msg.sender === "assistant"
@@ -658,11 +865,17 @@ export default function HomePage() {
                       : undefined,
                 }}
               >
-                {msg.text}
+                {msg.kind === "trip_plan" && msg.sender === "assistant" ? (
+                  <TripPlanView plan={msg.plan} />
+                ) : (
+                  // text messages (user or assistant)
+                  (msg as any).text
+                )}
               </div>
             </div>
           ))}
-          {loading && (
+
+          {(loading || waitingForReply) && (
             <div
               style={{
                 display: "flex",
@@ -684,8 +897,10 @@ export default function HomePage() {
               </div>
             </div>
           )}
+
           <div ref={chatEndRef} />
         </div>
+
         <div
           style={{
             borderTop: "1px solid #2a2b35",
@@ -713,20 +928,23 @@ export default function HomePage() {
                 color: "#f7f7fa",
                 fontSize: "1.04rem",
               }}
-              disabled={loading}
+              disabled={loading || waitingForReply}
             />
             <button
               type="submit"
-              disabled={loading || !input.trim()}
+              disabled={loading || waitingForReply || !input.trim()}
               style={{
-                background: loading || !input.trim() ? "#43444d" : "#007fff",
+                background:
+                  loading || waitingForReply || !input.trim()
+                    ? "#43444d"
+                    : "#007fff",
                 color: "#fff",
                 borderRadius: 10,
                 fontWeight: 600,
                 padding: "0 28px",
                 fontSize: "1.07rem",
                 border: "none",
-                cursor: loading ? "not-allowed" : "pointer",
+                cursor: loading || waitingForReply ? "not-allowed" : "pointer",
               }}
             >
               Send
