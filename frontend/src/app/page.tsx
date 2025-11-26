@@ -1,6 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 
+// ---------------- Types ----------------
+
 type Filters = {
   trip_types?: string[];
   difficulty?: string;
@@ -31,6 +33,8 @@ type TripPlan = {
   weather_hint?: string | null;
   lodging?: any;
   window_summary?: string | null;
+  intro_text?: string | null;
+  closing_tips?: string | null;
   itinerary: {
     day: number;
     title: string;
@@ -38,93 +42,234 @@ type TripPlan = {
     highlights: string[];
   }[];
 };
-
 type ChatMessage =
   | { sender: "user"; kind: "text"; text: string }
   | { sender: "assistant"; kind: "text"; text: string }
   | { sender: "assistant"; kind: "trip_plan"; plan: TripPlan };
 
-function TripPlanView({ plan }: { plan: TripPlan }) {
+// ---------------- Helpers ----------------
+
+function formatEnumLabel(value: string | null | undefined): string {
+  if (!value) return "";
+  return value
+    .split("_")
+    .map((w) => w.toLowerCase())
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+function formatBudgetBand(band: string | null | undefined): string {
+  if (!band) return "Any budget";
+  const map: Record<string, string> = {
+    USD_0_500: "USD $0 – $500",
+    USD_500_1500: "USD $500 – $1,500",
+    USD_1500_3000: "USD $1,500 – $3,000",
+    USD_3000_PLUS: "USD $3,000+",
+  };
+  return map[band] ?? formatEnumLabel(band);
+}
+function formatTripTypes(types: string[] | undefined): string {
+  if (!types || types.length === 0) return "Trip";
+  return types.map(formatEnumLabel).join(" • ");
+}
+function summarizeTripPlan(plan: TripPlan) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <>
+      Here’s your personalized itinerary for{" "}
+      <strong>{plan.destination || "your destination"}</strong> – a {plan.days}
+      -day {formatTripTypes(plan.trip_types).toLowerCase()} (
+      {formatBudgetBand(plan.budget_band)},{" "}
+      {formatEnumLabel(plan.difficulty).toLowerCase()} difficulty).
+      <br />
+      <br />
+      {plan.window_summary && (
+        <>
+          {plan.window_summary}
+          <br />
+          <br />
+        </>
+      )}
+      {plan.itinerary.map((day) => (
+        <div key={day.day}>
+          <strong>
+            Day {day.day}: {day.title}
+          </strong>
+          <br />
+          {day.highlights && day.highlights.length > 0 && (
+            <>
+              Highlights: {day.highlights.join(", ")}
+              <br />
+            </>
+          )}
+          {day.activities &&
+            day.activities.length > 0 &&
+            day.activities.map((a, idx) => (
+              <div key={idx}>
+                • {a.name}
+                {a.description ? `: ${a.description}` : ""}
+              </div>
+            ))}
+          <br />
+        </div>
+      ))}
+      {plan.lodging && plan.lodging.name && (
+        <>
+          Suggested lodging: {plan.lodging.name} (
+          {plan.lodging.type || "accommodation"})
+          {plan.lodging.notes ? ` – ${plan.lodging.notes}` : ""}
+          <br />
+        </>
+      )}
+      {plan.weather_hint && (
+        <>
+          Weather: {plan.weather_hint}
+          <br />
+        </>
+      )}
+      {plan.closing_tips && (
+        <>
+          Tips: {plan.closing_tips}
+          <br />
+        </>
+      )}
+    </>
+  );
+}
+
+// ---------------- UI Components ----------------
+
+function TripPlanView({ plan }: { plan: TripPlan }) {
+  const readableBudget = formatBudgetBand(plan.budget_band);
+  const readableDifficulty = plan.difficulty
+    ? formatEnumLabel(plan.difficulty)
+    : "Any difficulty";
+  const readableTripTypes = formatTripTypes(plan.trip_types);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Header */}
       <div
         style={{
-          marginBottom: 6,
+          marginBottom: 4,
           borderBottom: "1px solid rgba(255,255,255,0.08)",
-          paddingBottom: 8,
+          paddingBottom: 10,
         }}
       >
-        <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
+        <div
+          style={{
+            fontSize: "1.1rem",
+            fontWeight: 600,
+            marginBottom: 6,
+          }}
+        >
           🗺️ Trip plan for {plan.destination || "your destination"}
         </div>
-        <div style={{ fontSize: ".9rem", opacity: 0.8, marginTop: 4 }}>
-          {plan.days} days • {plan.trip_types?.join(", ") || "Trip"} •{" "}
-          {plan.difficulty || "Any difficulty"} •{" "}
-          {plan.budget_band || "Any budget"}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            fontSize: ".8rem",
+          }}
+        >
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.07)",
+            }}
+          >
+            {plan.days} days
+          </span>
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.07)",
+            }}
+          >
+            {readableTripTypes}
+          </span>
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.07)",
+            }}
+          >
+            {readableDifficulty}
+          </span>
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.07)",
+            }}
+          >
+            {readableBudget}
+          </span>
         </div>
         {plan.window_summary && (
           <div
             style={{
               fontSize: ".85rem",
               opacity: 0.8,
-              marginTop: 4,
+              marginTop: 8,
             }}
           >
             {plan.window_summary}
           </div>
         )}
       </div>
-
       {/* Itinerary */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}
+      >
         {plan.itinerary.map((day) => (
           <div
             key={day.day}
             style={{
-              padding: "10px 12px",
-              borderRadius: 10,
+              padding: "12px 14px",
+              borderRadius: 12,
               background: "rgba(0,0,0,0.18)",
               border: "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <div
               style={{
-                fontWeight: 550,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
                 marginBottom: 4,
-                fontSize: ".98rem",
               }}
             >
-              Day {day.day}: {day.title}
+              <div
+                style={{
+                  fontWeight: 550,
+                  fontSize: ".97rem",
+                }}
+              >
+                Day {day.day}: {day.title}
+              </div>
+              {day.activities?.length > 0 && (
+                <div style={{ fontSize: ".78rem", opacity: 0.75 }}>
+                  {day.activities.length} activities
+                </div>
+              )}
             </div>
-
             {day.highlights?.length > 0 && (
-              <div style={{ fontSize: ".88rem", opacity: 0.9 }}>
-                <div style={{ marginBottom: 2 }}>Highlights:</div>
-                <ul
-                  style={{
-                    margin: 0,
-                    paddingLeft: "1.1rem",
-                    marginTop: 2,
-                  }}
-                >
+              <div style={{ fontSize: ".86rem", opacity: 0.92 }}>
+                <div style={{ marginBottom: 2, fontWeight: 500 }}>
+                  Highlights
+                </div>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", marginTop: 3 }}>
                   {day.highlights.map((h, idx) => (
                     <li key={idx}>{h}</li>
                   ))}
                 </ul>
-              </div>
-            )}
-
-            {day.activities?.length > 0 && (
-              <div
-                style={{
-                  fontSize: ".86rem",
-                  opacity: 0.85,
-                  marginTop: 4,
-                }}
-              >
-                {/* placeholder until you model activities better */}
-                {day.activities.length} activities planned
               </div>
             )}
           </div>
@@ -134,17 +279,18 @@ function TripPlanView({ plan }: { plan: TripPlan }) {
   );
 }
 
+// ---------------- Main Page ----------------
+
 export default function HomePage() {
   const [input, setInput] = useState("");
   const [threadId, setThreadId] = useState<string | null>(null);
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [filters, setFilters] = useState<Filters>({});
-  const [loading, setLoading] = useState(false); // network for send
-  const [waitingForReply, setWaitingForReply] = useState(false); // worker in progress
+  const [loading, setLoading] = useState(false);
+  const [waitingForReply, setWaitingForReply] = useState(false);
   const [latestAssistantId, setLatestAssistantId] = useState<string | null>(
     null
   );
-
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -200,12 +346,10 @@ export default function HomePage() {
     localStorage.setItem("thread_id", data.id);
   };
 
-  // ---- Poll /trip/latest for assistant reply ----
+  // ---- Poll /trip/latest ----
   useEffect(() => {
     if (!threadId || !waitingForReply) return;
-
     let cancelled = false;
-
     const poll = async () => {
       if (cancelled) return;
       try {
@@ -213,18 +357,13 @@ export default function HomePage() {
           `http://localhost:8000/trip/latest?thread_id=${threadId}`
         );
         const data = await res.json();
-        console.log("Polling /trip/latest:", data);
-
         if (cancelled) return;
-
         if (data.status === "ok" && data.message) {
           const msg = data.message;
-          const msgId: string | undefined = msg.id ?? msg.message_id;
-
+          const msgId = msg.id ?? msg.message_id;
           if (msgId && msgId !== latestAssistantId) {
             const content = msg.content;
-
-            // 1) If it's a structured trip plan, store as such
+            // 1) structured trip plan
             if (
               content &&
               typeof content === "object" &&
@@ -236,11 +375,12 @@ export default function HomePage() {
                   sender: "assistant",
                   kind: "trip_plan",
                   plan: content as TripPlan,
+                  messageId: msgId, // <-- add this field
                 },
               ]);
             } else {
-              // 2) Fallback: plain text assistant message
-              let text: string;
+              // 2) Fallback: plain text
+              let text;
               if (typeof content === "string") {
                 text = content;
               } else if (content && typeof content.text === "string") {
@@ -248,45 +388,38 @@ export default function HomePage() {
               } else {
                 text = JSON.stringify(content ?? msg);
               }
-
               setChat((prev) => [
                 ...prev,
-                { sender: "assistant", kind: "text", text },
+                {
+                  sender: "assistant",
+                  kind: "text",
+                  text: `${text}\n\nMessage ID: ${msgId}`,
+                  messageId: msgId, // <-- add this field
+                },
               ]);
             }
-
             setLatestAssistantId(msgId);
             setWaitingForReply(false);
             return;
           }
         }
-
-        // No new assistant message yet → poll again
         setTimeout(poll, 1500);
       } catch (err) {
-        console.error("Error polling latest reply", err);
-        // backoff a bit longer on errors
         setTimeout(poll, 3000);
       }
     };
-
     poll();
-
     return () => {
       cancelled = true;
     };
   }, [threadId, waitingForReply, latestAssistantId]);
 
-  //---- SEND MESSAGE WITH FILTERS ----
+  //---- SEND MESSAGE ----
   const sendMessage = async () => {
     if (!input.trim() || loading || !threadId) return;
-
-    // Show user message immediately
     setChat((prev) => [...prev, { sender: "user", kind: "text", text: input }]);
     setLoading(true);
-
     try {
-      // 1. Save message in /messages (DB service)
       const saveMessageRes = await fetch("http://localhost:8001/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -298,9 +431,6 @@ export default function HomePage() {
       });
       if (!saveMessageRes.ok) throw new Error("Failed to save message");
       const savedMessage = await saveMessageRes.json();
-      console.log("✓ Message Saved In DB", savedMessage);
-
-      // 2. Send job to /trip/plan (gateway → worker)
       const requestBody = {
         request_id: "frontend-" + Date.now(),
         thread_id: threadId,
@@ -314,32 +444,30 @@ export default function HomePage() {
         body: JSON.stringify(requestBody),
       });
       if (!res.ok) throw new Error("Failed trip plan enqueue");
-
-      const data = await res.json();
-      console.log("Enqueued trip plan:", data);
-
-      // Now we wait for the worker to process → polling loop will pick it up
       setWaitingForReply(true);
     } catch (err) {
-      console.error("Error in sendMessage:", err);
       setChat((prev) => [
         ...prev,
-        { sender: "assistant", kind: "text", text: "Error contacting server." },
+        {
+          sender: "assistant",
+          kind: "text",
+          text: "Error contacting server.",
+        },
       ]);
     }
-
     setInput("");
     setLoading(false);
   };
 
+  // --------------- RENDER ---------------
   return (
     <div
       style={{
         height: "100vh",
         width: "100vw",
-        background: "#22232a",
-        color: "#f6f6f6",
-        fontFamily: "Inter, Arial, sans-serif",
+        background: "#24262F", // Perplexity-like grey (change from "#181920" or "#1e1f27")
+        color: "#F9F9FB", // White text (change from "#f6f6f6")
+        fontFamily: "Inter, system-ui, -apple-system, BlinkMacSystemFont",
         display: "flex",
         flexDirection: "row",
         alignItems: "stretch",
@@ -350,90 +478,110 @@ export default function HomePage() {
       <div
         style={{
           width: 320,
-          minWidth: 190,
-          background: "#191a20",
-          padding: "38px 14px 0 28px",
-          boxShadow: "0 6px 22px 0 rgba(20,20,30,0.16)",
+          minWidth: 220,
+          background: "#15161c",
+          padding: "24px 18px 20px 24px",
+          boxShadow: "2px 0 18px rgba(0,0,0,0.4)",
           display: "flex",
           flexDirection: "column",
-          borderRight: "1px solid #292932",
+          borderRight: "1px solid #262733",
           overflowY: "auto",
         }}
       >
-        <div
-          style={{
-            fontSize: "1.15rem",
-            fontWeight: 600,
-            marginBottom: 24,
-            letterSpacing: ".2px",
-          }}
-        >
-          <span role="img" aria-label="filters" style={{ marginRight: 6 }}>
-            🧮
-          </span>
-          Trip Filters
-        </div>
-
         {/* Trip Types */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
-            Trip type
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
+            Trip Type
           </div>
-          {["TREKKING", "CAMPING", "CITY", "ROAD_TRIP", "HIKING"].map(
-            (type) => (
-              <label
-                key={type}
-                style={{
-                  display: "block",
-                  marginBottom: 3,
-                  fontSize: ".98rem",
-                  color: "#aaa",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.trip_types?.includes(type) || false}
-                  onChange={(e) =>
-                    setFilters((f) => ({
-                      ...f,
-                      trip_types: e.target.checked
-                        ? [...(f.trip_types || []), type]
-                        : (f.trip_types || []).filter(
-                            (t: string) => t !== type
-                          ),
-                    }))
-                  }
-                />{" "}
-                {type.charAt(0) + type.slice(1).toLowerCase().replace("_", " ")}
-              </label>
-            )
-          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {["TREKKING", "CAMPING", "CITY", "ROAD_TRIP", "HIKING"].map(
+              (type) => (
+                <label
+                  key={type}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: ".9rem",
+                    color: "#a7a7bb",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={(filters.trip_types ?? []).includes(type)}
+                    onChange={(e) =>
+                      setFilters((f) => ({
+                        ...f,
+                        trip_types: e.target.checked
+                          ? [...(f.trip_types ?? []), type]
+                          : (f.trip_types ?? []).filter(
+                              (t: string) => t !== type
+                            ),
+                      }))
+                    }
+                  />
+                  <span>{formatEnumLabel(type)}</span>
+                </label>
+              )
+            )}
+          </div>
         </div>
 
         {/* Difficulty */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Difficulty
           </div>
-          {["EASY", "MODERATE", "HARD"].map((diff) => (
-            <label
-              key={diff}
-              style={{ marginRight: 12, fontSize: ".98rem", color: "#aaa" }}
-            >
-              <input
-                type="radio"
-                name="difficulty"
-                checked={filters.difficulty === diff}
-                onChange={() => setFilters((f) => ({ ...f, difficulty: diff }))}
-              />{" "}
-              {diff[0] + diff.slice(1).toLowerCase()}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {["EASY", "MODERATE", "HARD"].map((diff) => (
+              <label
+                key={diff}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="radio"
+                  name="difficulty"
+                  checked={filters.difficulty === diff}
+                  onChange={() =>
+                    setFilters((f) => ({ ...f, difficulty: diff }))
+                  }
+                />
+                <span>{formatEnumLabel(diff)}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Budget Level */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Budget (USD)
           </div>
           <select
@@ -442,26 +590,33 @@ export default function HomePage() {
               setFilters((f) => ({ ...f, budget_level: e.target.value }))
             }
             style={{
-              marginTop: 6,
               width: "100%",
-              padding: "8px",
+              padding: "7px 8px",
               borderRadius: 6,
-              background: "#23242b",
+              background: "#20212a",
               color: "#f7f7fa",
-              border: "1px solid #393a43",
+              border: "1px solid #343545",
+              fontSize: ".9rem",
             }}
           >
             <option value="">Any</option>
-            <option value="USD_0_500">0 - 500</option>
-            <option value="USD_500_1500">500 - 1,500</option>
-            <option value="USD_1500_3000">1,500 - 3,000</option>
-            <option value="USD_3000_PLUS">3,000+</option>
+            <option value="USD_0_500">USD $0 – $500</option>
+            <option value="USD_500_1500">USD $500 – $1,500</option>
+            <option value="USD_1500_3000">USD $1,500 – $3,000</option>
+            <option value="USD_3000_PLUS">USD $3,000+</option>
           </select>
         </div>
 
         {/* Duration Days */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Duration (days)
           </div>
           <input
@@ -477,20 +632,28 @@ export default function HomePage() {
               }));
             }}
             style={{
-              width: "75%",
+              width: "70%",
               padding: "7px",
               borderRadius: 6,
-              border: "1px solid #393a43",
-              background: "#23242b",
+              border: "1px solid #343545",
+              background: "#20212a",
               color: "#f7f7fa",
+              fontSize: ".9rem",
             }}
             placeholder="5"
           />
         </div>
 
-        {/* Group type */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        {/* Group Type */}
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Group Type
           </div>
           <select
@@ -499,13 +662,13 @@ export default function HomePage() {
               setFilters((f) => ({ ...f, group_type: e.target.value }))
             }
             style={{
-              marginTop: 6,
               width: "100%",
-              padding: "8px",
+              padding: "7px 8px",
               borderRadius: 6,
-              background: "#23242b",
+              background: "#20212a",
               color: "#f7f7fa",
-              border: "1px solid #393a43",
+              border: "1px solid #343545",
+              fontSize: ".9rem",
             }}
           >
             <option value="">Any</option>
@@ -517,151 +680,198 @@ export default function HomePage() {
           </select>
         </div>
 
-        {/* Travel modes */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        {/* Travel Modes */}
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Travel Modes
           </div>
-          {["CAR", "BUS", "FLIGHT", "BIKE"].map((mode) => (
-            <label
-              key={mode}
-              style={{
-                display: "inline-block",
-                marginRight: 12,
-                fontSize: ".98rem",
-                color: "#aaa",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={filters.travel_modes?.includes(mode) || false}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    travel_modes: e.target.checked
-                      ? [...(f.travel_modes || []), mode]
-                      : (f.travel_modes || []).filter(
-                          (m: string) => m !== mode
-                        ),
-                  }))
-                }
-              />
-              {mode.charAt(0) + mode.slice(1).toLowerCase()}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["CAR", "BUS", "FLIGHT", "BIKE"].map((mode) => (
+              <label
+                key={mode}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={(filters.travel_modes ?? []).includes(mode)}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      travel_modes: e.target.checked
+                        ? [...(f.travel_modes ?? []), mode]
+                        : (f.travel_modes ?? []).filter(
+                            (m: string) => m !== mode
+                          ),
+                    }))
+                  }
+                />
+                <span>{formatEnumLabel(mode)}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Accommodation */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Accommodation
           </div>
-          {["CAMPING", "HOTEL", "HOSTEL", "LODGE"].map((acc) => (
-            <label
-              key={acc}
-              style={{
-                display: "inline-block",
-                marginRight: 12,
-                fontSize: ".98rem",
-                color: "#aaa",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={filters.accommodation?.includes(acc) || false}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    accommodation: e.target.checked
-                      ? [...(f.accommodation || []), acc]
-                      : (f.accommodation || []).filter(
-                          (a: string) => a !== acc
-                        ),
-                  }))
-                }
-              />
-              {acc.charAt(0) + acc.slice(1).toLowerCase()}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["CAMPING", "HOTEL", "HOSTEL", "LODGE"].map((acc) => (
+              <label
+                key={acc}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={(filters.accommodation ?? []).includes(acc)}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      accommodation: e.target.checked
+                        ? [...(f.accommodation ?? []), acc]
+                        : (f.accommodation ?? []).filter(
+                            (a: string) => a !== acc
+                          ),
+                    }))
+                  }
+                />
+                <span>{formatEnumLabel(acc)}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Accessibility */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Accessibility
           </div>
-          {["PET_FRIENDLY", "WHEELCHAIR", "KIDS"].map((tag) => (
-            <label
-              key={tag}
-              style={{
-                display: "inline-block",
-                marginRight: 12,
-                fontSize: ".98rem",
-                color: "#aaa",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={filters.accessibility?.includes(tag) || false}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    accessibility: e.target.checked
-                      ? [...(f.accessibility || []), tag]
-                      : (f.accessibility || []).filter(
-                          (a: string) => a !== tag
-                        ),
-                  }))
-                }
-              />
-              {tag.replace("_", " ")}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["PET_FRIENDLY", "WHEELCHAIR", "KIDS"].map((tag) => (
+              <label
+                key={tag}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={(filters.accessibility ?? []).includes(tag)}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      accessibility: e.target.checked
+                        ? [...(f.accessibility ?? []), tag]
+                        : (f.accessibility ?? []).filter(
+                            (a: string) => a !== tag
+                          ),
+                    }))
+                  }
+                />
+                <span>{formatEnumLabel(tag)}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {/* Meal preferences */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Meal Preferences
           </div>
-          {["VEGETARIAN", "VEGAN", "GLUTEN_FREE", "NONE"].map((mp) => (
-            <label
-              key={mp}
-              style={{
-                display: "inline-block",
-                marginRight: 12,
-                fontSize: ".98rem",
-                color: "#aaa",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={filters.meal_preferences?.includes(mp) || false}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    meal_preferences: e.target.checked
-                      ? [...(f.meal_preferences || []), mp]
-                      : (f.meal_preferences || []).filter(
-                          (m: string) => m !== mp
-                        ),
-                  }))
-                }
-              />
-              {mp.replace("_", " ")}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["VEGETARIAN", "VEGAN", "GLUTEN_FREE", "NONE"].map((mp) => (
+              <label
+                key={mp}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={(filters.meal_preferences ?? []).includes(mp)}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      meal_preferences: e.target.checked
+                        ? [...(f.meal_preferences ?? []), mp]
+                        : (f.meal_preferences ?? []).filter(
+                            (m: string) => m !== mp
+                          ),
+                    }))
+                  }
+                />
+                <span>{formatEnumLabel(mp)}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
-        {/* Must Include / Must Exclude */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        {/* Must Include */}
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Must Include
           </div>
           <input
             type="text"
-            placeholder="e.g. NATIONAL_PARK, MUSEUM"
-            value={filters.must_include?.join(", ") || ""}
+            placeholder="e.g. National park, Museum"
+            value={(filters.must_include ?? []).join(", ")}
             onChange={(e) =>
               setFilters((f) => ({
                 ...f,
@@ -675,19 +885,27 @@ export default function HomePage() {
               width: "100%",
               padding: "7px",
               borderRadius: 6,
-              border: "1px solid #393a43",
-              background: "#23242b",
+              border: "1px solid #343545",
+              background: "#20212a",
               color: "#f7f7fa",
-              marginBottom: 7,
+              marginBottom: 8,
+              fontSize: ".9rem",
             }}
           />
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Must Exclude
           </div>
           <input
             type="text"
-            placeholder="e.g. FLIGHT"
-            value={filters.must_exclude?.join(", ") || ""}
+            placeholder="e.g. Flight"
+            value={(filters.must_exclude ?? []).join(", ")}
             onChange={(e) =>
               setFilters((f) => ({
                 ...f,
@@ -701,22 +919,30 @@ export default function HomePage() {
               width: "100%",
               padding: "7px",
               borderRadius: 6,
-              border: "1px solid #393a43",
-              background: "#23242b",
+              border: "1px solid #343545",
+              background: "#20212a",
               color: "#f7f7fa",
+              fontSize: ".9rem",
             }}
           />
         </div>
 
         {/* Interest Tags */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Interest Tags
           </div>
           <input
             type="text"
-            placeholder="e.g. PHOTOGRAPHY, NATURE"
-            value={filters.interest_tags?.join(", ") || ""}
+            placeholder="e.g. Photography, Nature"
+            value={(filters.interest_tags ?? []).join(", ")}
             onChange={(e) =>
               setFilters((f) => ({
                 ...f,
@@ -730,78 +956,97 @@ export default function HomePage() {
               width: "100%",
               padding: "7px",
               borderRadius: 6,
-              border: "1px solid #393a43",
-              background: "#23242b",
+              border: "1px solid #343545",
+              background: "#20212a",
               color: "#f7f7fa",
+              fontSize: ".9rem",
             }}
           />
         </div>
 
         {/* Events only */}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontWeight: 500, color: "#cdcddc" }}>
+        <div style={{ marginBottom: 12 }}>
+          <label
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              fontSize: ".9rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
             <input
               type="checkbox"
               checked={filters.events_only || false}
               onChange={(e) =>
                 setFilters((f) => ({ ...f, events_only: e.target.checked }))
               }
-              style={{ marginRight: 7 }}
             />
-            Events Only
+            Events only
           </label>
         </div>
 
         {/* Amenities */}
-        <div style={{ marginBottom: 18 }}>
-          <div style={{ fontWeight: 500, color: "#cdcddc", marginBottom: 3 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div
+            style={{
+              fontWeight: 500,
+              color: "#d8d8e3",
+              marginBottom: 6,
+              fontSize: ".9rem",
+            }}
+          >
             Amenities
           </div>
-          {["WI_FI", "SPA", "POOL", "PARKING"].map((am) => (
-            <label
-              key={am}
-              style={{
-                display: "inline-block",
-                marginRight: 12,
-                fontSize: ".98rem",
-                color: "#aaa",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={filters.amenities?.includes(am) || false}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    amenities: e.target.checked
-                      ? [...(f.amenities || []), am]
-                      : (f.amenities || []).filter((a: string) => a !== am),
-                  }))
-                }
-              />
-              {am.replace("_", " ")}
-            </label>
-          ))}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {["WI_FI", "SPA", "POOL", "PARKING"].map((am) => (
+              <label
+                key={am}
+                style={{
+                  fontSize: ".9rem",
+                  color: "#a7a7bb",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={(filters.amenities ?? []).includes(am)}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      amenities: e.target.checked
+                        ? [...(f.amenities ?? []), am]
+                        : (f.amenities ?? []).filter((a: string) => a !== am),
+                    }))
+                  }
+                />
+                <span>{formatEnumLabel(am)}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
-
       {/* ---- Chat Panel ---- */}
       <div
         style={{
           flex: 1,
-          background: "#23242b",
+          background: "#24262F", // Same as main background
           display: "flex",
           flexDirection: "column",
           height: "100vh",
           minWidth: 340,
+          color: "#F9F9FB",
         }}
       >
         <div
           style={{
-            padding: "24px 32px 14px 32px",
-            borderBottom: "1px solid #292932",
+            padding: "18px 34px 14px 34px",
+            borderBottom: "1px solid #262733",
             fontWeight: 600,
-            fontSize: "1.18rem",
+            fontSize: "1.05rem",
             justifyContent: "space-between",
             display: "flex",
             alignItems: "center",
@@ -811,105 +1056,141 @@ export default function HomePage() {
             <span role="img" aria-label="plane">
               🛩️
             </span>{" "}
-            TRAVEL BOT - Your AI travel chatbot
+            TravelBot – AI Travel Planner
           </span>
           <button
             onClick={handleNewChat}
             style={{
-              background: "#363649",
+              background: "#35364a",
               color: "#fff",
               border: "none",
               borderRadius: 7,
-              padding: "6px 18px",
-              fontSize: ".98rem",
+              padding: "6px 16px",
+              fontSize: ".9rem",
               cursor: "pointer",
               marginLeft: "auto",
               marginRight: 0,
             }}
           >
-            New Chat
+            New chat
           </button>
         </div>
-
         <div
           style={{
             flex: 1,
             overflowY: "auto",
-            padding: "28px 30px 10px 30px",
+            padding: "20px 0 10px 0",
             display: "flex",
             flexDirection: "column",
+            alignItems: "center",
           }}
         >
-          {chat.map((msg, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                justifyContent:
-                  msg.sender === "user" ? "flex-end" : "flex-start",
-                marginBottom: 18,
-              }}
-            >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 760,
+              padding: "0 24px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {chat.map((msg, i) => (
               <div
+                key={i}
                 style={{
-                  maxWidth: "75%",
-                  background: msg.sender === "user" ? "#0081fa" : "#393a41",
-                  color: msg.sender === "user" ? "#fff" : "#e9eaf0",
-                  borderRadius: 15,
-                  padding: "14px 22px",
-                  fontSize: "1.02rem",
-                  whiteSpace: "pre-wrap",
-                  boxShadow:
-                    msg.sender === "assistant"
-                      ? "0 2px 18px rgba(0,0,0,0.07)"
-                      : undefined,
+                  display: "flex",
+                  justifyContent:
+                    msg.sender === "user" ? "flex-end" : "flex-start",
+                  marginBottom: 16,
                 }}
               >
-                {msg.kind === "trip_plan" && msg.sender === "assistant" ? (
-                  <TripPlanView plan={msg.plan} />
-                ) : (
-                  // text messages (user or assistant)
-                  (msg as any).text
-                )}
+                <div
+                  style={{
+                    maxWidth: "80%",
+                    background: msg.sender === "user" ? "#007fff" : "#24253b",
+                    color: msg.sender === "user" ? "#fff" : "#e9eaf0",
+                    borderRadius: 12,
+                    padding:
+                      msg.kind === "trip_plan" && msg.sender === "assistant"
+                        ? "16px 18px"
+                        : "11px 15px",
+                    fontSize: "1rem",
+                    whiteSpace: "pre-line",
+                    boxShadow:
+                      msg.sender === "assistant"
+                        ? "0 2px 16px rgba(0,0,0,0.32)"
+                        : "0 1px 10px rgba(0,0,0,0.22)",
+                    borderLeft:
+                      msg.sender === "assistant" && msg.kind === "trip_plan"
+                        ? "4px solid #007fff"
+                        : "none",
+                  }}
+                >
+                  {msg.kind === "trip_plan" && msg.sender === "assistant" ? (
+                    <div style={{ whiteSpace: "pre-line" }}>
+                      <div style={{ marginBottom: "1em" }}>
+                        {msg.plan.intro_text || ""}
+                      </div>
+                      {summarizeTripPlan(msg.plan)}
+                      {msg.plan.closing_tips && (
+                        <div
+                          style={{
+                            marginTop: "1.5em",
+                            fontStyle: "italic",
+                            opacity: 0.8,
+                          }}
+                        >
+                          {msg.plan.closing_tips}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    (msg as any).text
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-
-          {(loading || waitingForReply) && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-start",
-                marginBottom: 18,
-              }}
-            >
+            ))}
+            {(loading || waitingForReply) && (
               <div
                 style={{
-                  background: "#393a41",
-                  color: "#e9eaf0",
-                  borderRadius: 15,
-                  padding: "14px 22px",
-                  fontSize: "1.08rem",
-                  fontStyle: "italic",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  marginBottom: 18,
                 }}
               >
-                TravelBot is thinking…
+                <div
+                  style={{
+                    background: "#2d2f3a",
+                    color: "#e9eaf0",
+                    borderRadius: 12,
+                    padding: "10px 16px",
+                    fontSize: ".95rem",
+                    fontStyle: "italic",
+                  }}
+                >
+                  TravelBot is thinking…
+                </div>
               </div>
-            </div>
-          )}
-
-          <div ref={chatEndRef} />
+            )}
+            <div ref={chatEndRef} />
+          </div>
         </div>
-
         <div
           style={{
-            borderTop: "1px solid #2a2b35",
-            padding: "22px 32px",
-            background: "#292933",
+            borderTop: "1px solid #262733",
+            padding: "16px 30px 18px 30px",
+            background: "#1a1b22",
+            display: "flex",
+            justifyContent: "center",
           }}
         >
           <form
-            style={{ display: "flex", gap: 12 }}
+            style={{
+              display: "flex",
+              gap: 10,
+              width: "100%",
+              maxWidth: 760,
+            }}
             onSubmit={(e) => {
               e.preventDefault();
               sendMessage();
@@ -918,15 +1199,15 @@ export default function HomePage() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask TravelBot..."
+              placeholder="Ask TravelBot for a trip plan…"
               style={{
                 flex: 1,
-                padding: "16px 20px",
-                borderRadius: 13,
-                border: "1px solid #34343a",
-                background: "#181920",
+                padding: "12px 16px",
+                borderRadius: 10,
+                border: "1px solid #343545",
+                background: "#11121a",
                 color: "#f7f7fa",
-                fontSize: "1.04rem",
+                fontSize: ".98rem",
               }}
               disabled={loading || waitingForReply}
             />
@@ -936,15 +1217,18 @@ export default function HomePage() {
               style={{
                 background:
                   loading || waitingForReply || !input.trim()
-                    ? "#43444d"
+                    ? "#3d3e4a"
                     : "#007fff",
                 color: "#fff",
                 borderRadius: 10,
                 fontWeight: 600,
-                padding: "0 28px",
-                fontSize: "1.07rem",
+                padding: "0 24px",
+                fontSize: ".98rem",
                 border: "none",
-                cursor: loading || waitingForReply ? "not-allowed" : "pointer",
+                cursor:
+                  loading || waitingForReply || !input.trim()
+                    ? "not-allowed"
+                    : "pointer",
               }}
             >
               Send

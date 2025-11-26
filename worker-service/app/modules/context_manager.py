@@ -22,7 +22,7 @@ class ContextManager:
     Builds a compact context pack:
       - recent_messages (short-term window from db-service)
       - long_term_memories (semantic recall from vector memory via db-service)
-      - window_summary (light heuristic)
+      - window_summary (light heuristic, but no fake defaults)
       - normalized constraints/geoscope/time (pass-through)
       - api_intents & cache_keys (simple fetch plan)
     """
@@ -85,14 +85,12 @@ class ContextManager:
         # ---- 2) Determine last_user (with fallback for first message) ----
         logger.info("CTX: building window summary & last_user...")
 
-        # Try to find last user message from DB history
         last_user = next(
             (m for m in reversed(recent) if m.get("role") == "user"),
             None,
         )
 
         # Fallback for first message / empty history:
-        # Synthesize a "user" message from the normalized_message itself.
         if last_user is None:
             logger.info(
                 "CTX: no last_user from recent; trying to synthesize from normalized_message"
@@ -148,23 +146,57 @@ class ContextManager:
 
         logger.info("CTX: final last_user for thread_id=%s => %s", thread_id, last_user)
 
-        # ---- Window summary (use last_user if present) ----
-        diff = (constraints.get("difficulty") or {}).get("level", "EASY")
-        band = (constraints.get("budget") or {}).get("band", "USD_0_500")
-        travel_modes = ", ".join(
-            constraints.get("transport", {}).get("allowed", []) or ["CAR"]
-        )
-        trip_types = ", ".join(constraints.get("trip_types", []) or ["CAMPING"])
+        # ---- Window summary (no fake defaults) ----
+        summary_parts: List[str] = []
 
-        window_summary = (
-            f"Recent focus: {trip_types}; difficulty {diff}; "
-            f"budget {band}; travel by {travel_modes}."
-            + (
-                f" Last user: {last_user['text'][:120]}..."
-                if last_user and last_user.get("text")
-                else ""
-            )
+        # difficulty can be either {"level": "..."} or plain string
+        raw_diff = constraints.get("difficulty")
+        diff = None
+        if isinstance(raw_diff, dict):
+            diff = raw_diff.get("level")
+        elif isinstance(raw_diff, str):
+            diff = raw_diff
+
+        raw_budget = constraints.get("budget")
+        band = None
+        if isinstance(raw_budget, dict):
+            band = raw_budget.get("band")
+        elif isinstance(raw_budget, str):
+            band = raw_budget
+
+        budget_level = constraints.get("budget_level")
+        if not band and isinstance(budget_level, str):
+            band = budget_level
+
+        transport_allowed = (
+            constraints.get("transport", {}).get("allowed") or []
         )
+        travel_modes = ", ".join(transport_allowed) if transport_allowed else ""
+
+        trip_types_list = constraints.get("trip_types") or []
+        trip_types = ", ".join(trip_types_list) if trip_types_list else ""
+
+        if trip_types:
+            summary_parts.append(trip_types)
+        if diff:
+            summary_parts.append(f"difficulty {diff}")
+        if band:
+            summary_parts.append(f"budget {band}")
+        if travel_modes:
+            summary_parts.append(f"travel by {travel_modes}")
+
+        if summary_parts:
+            window_summary = "Recent focus: " + "; ".join(summary_parts) + "."
+        else:
+            window_summary = ""
+
+        if last_user and last_user.get("text"):
+            # Append last user text if we have it
+            preview = last_user["text"][:120]
+            if window_summary:
+                window_summary += f" Last user: {preview}..."
+            else:
+                window_summary = f"Last user: {preview}..."
 
         # ---- 3) Long-term memory via db-service (vector DB proxied there) ----
         logger.info("CTX: creating long-term memories...")
@@ -232,6 +264,7 @@ class ContextManager:
             long_term_memories, used_memory_ids = [], []
 
         # ---- 4) API intents and cache keys ----
+        # Internal defaults are still OK for tools; they are not user-facing.
         region = (geoscope.get("destination") or {}).get(
             "region_code", S.DEFAULT_REGION_CODE
         )
@@ -321,6 +354,7 @@ class ContextManager:
                 m["message_id"] for m in recent if m.get("message_id")
             ],
             "window_summary": window_summary,
+            "last_user": last_user,  # 👈 expose explicitly for the LLM layer
             "long_term_memories": long_term_memories,
             "used_memory_ids": used_memory_ids,
             "constraints": constraints,
