@@ -20,8 +20,6 @@ class TripRequest(BaseModel):
     content: str
 
 
-
-
 @router.post("/plan")
 async def submit_trip_request(request: TripRequest):
     """
@@ -68,25 +66,39 @@ async def submit_trip_request(request: TripRequest):
 
 
 @router.get("/latest")
-async def get_latest_reply(thread_id: str = Query(...)):
+async def get_latest_reply(
+    thread_id: str = Query(...),
+    after_message_id: str | None = Query(None),  # 👈 NEW: optional cursor
+):
     """
     Returns the latest assistant message in a thread (if any).
-    Used by frontend polling.
+
+    If `after_message_id` is provided and the latest assistant message has
+    the same id, we return `status = "no_new_message"` so the frontend
+    knows there's nothing new to display.
     """
-    db = DBServiceClient()   
+    db = DBServiceClient()
 
     try:
+        # You can tune skip/limit; leaving as-is for now
         msgs = await db.get_thread_messages(thread_id=thread_id, skip=0, limit=100)
         assistants = [m for m in msgs if m.get("role") == "assistant"]
 
         if not assistants:
             return {"status": "pending", "message": None}
 
+        # latest by created_at (assuming ISO timestamp string or datetime)
         latest = sorted(
             assistants,
             key=lambda m: m.get("created_at") or "",
             reverse=True,
         )[0]
+
+        latest_id = latest.get("id") or latest.get("message_id")
+
+        # 👇 NEW: if client already has this message, tell them there's nothing new
+        if after_message_id and latest_id and latest_id == after_message_id:
+            return {"status": "no_new_message", "message": None}
 
         return {
             "status": "ok",
@@ -94,6 +106,12 @@ async def get_latest_reply(thread_id: str = Query(...)):
         }
 
     except Exception as e:
-        pass
+        logger.exception(
+            "TRIP /latest: failed to fetch latest reply",
+            extra={"thread_id": thread_id, "after_message_id": after_message_id},
+        )
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch latest reply: {e}"
+        )
     finally:
         await db.close()

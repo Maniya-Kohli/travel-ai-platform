@@ -264,10 +264,15 @@ class ContextManager:
             long_term_memories, used_memory_ids = [], []
 
         # ---- 4) API intents and cache keys ----
-        # Internal defaults are still OK for tools; they are not user-facing.
-        region = (geoscope.get("destination") or {}).get(
-            "region_code", S.DEFAULT_REGION_CODE
-        )
+        # Use only what the user/geoscope provided; no hard-coded region fallback.
+        destination = geoscope.get("destination") or {}
+        region = destination.get("region_code")
+
+        lodging = constraints.get("lodging") or {}
+        lodging_types = lodging.get("types") or []
+        lodging_type = lodging_types[0] if lodging_types else None
+        pet_friendly_required = lodging.get("pet_friendly_required")
+
         tags = list(
             set(
                 (constraints.get("poi_tags", {}).get("must_include") or [])
@@ -291,9 +296,7 @@ class ContextManager:
                 "params": {
                     "region": region,
                     "tags": tags,
-                    "pet_friendly": constraints.get("lodging", {}).get(
-                        "pet_friendly_required", False
-                    ),
+                    "pet_friendly": pet_friendly_required,
                     "season_hint": time_block.get("season_hint"),
                 },
                 "caps": {"limit": 20, "timeout_s": 6},
@@ -302,13 +305,8 @@ class ContextManager:
                 "tool": "search_lodging",
                 "params": {
                     "region": region,
-                    "type": (
-                        constraints.get("lodging", {}).get("types")
-                        or ["CAMPING"]
-                    )[0],
-                    "pet_friendly": constraints.get("lodging", {}).get(
-                        "pet_friendly_required", False
-                    ),
+                    "type": lodging_type,
+                    "pet_friendly": pet_friendly_required,
                 },
                 "caps": {"limit": 3, "timeout_s": 6},
             },
@@ -321,20 +319,16 @@ class ContextManager:
                 f"{time_block.get('season_hint')}:"
                 + (
                     "PET"
-                    if constraints.get("lodging", {}).get(
-                        "pet_friendly_required"
-                    )
+                    if pet_friendly_required
                     else "ANY"
                 )
             ),
             "lodging": (
                 f"lodging:{region}:"
-                f"{(constraints.get('lodging', {}).get('types') or ['CAMPING'])[0]}:"
+                f"{lodging_type}:"
                 + (
                     "PET"
-                    if constraints.get("lodging", {}).get(
-                        "pet_friendly_required"
-                    )
+                    if pet_friendly_required
                     else "ANY"
                 )
             ),
@@ -370,6 +364,8 @@ class ContextManager:
                 "retrieval_query": (query_text[:160] if query_text else None),
             },
         }
+
+        print('Context message' ,context_pack )
         return context_pack
 
     async def close(self):

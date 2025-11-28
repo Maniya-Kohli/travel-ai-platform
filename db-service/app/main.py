@@ -2,8 +2,12 @@
 DB Service - Main Application
 FastAPI app for database access layer
 """
+import os
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.config import get_settings
 from app.database import init_db
 from app.routes.health import router as health
@@ -12,9 +16,20 @@ from app.routes.message_routes import router as message_routes
 from app.routes.normalised_message_routes import router as normalised_message_routes
 from app.routes.vectordb_routes import router as vectordb_routes
 from platform_common.logging_config import init_logging
-import logging
 
 
+# 🔧 Optional debugpy attach (controlled by env vars)
+if os.getenv("ENABLE_DEBUGPY", "0") == "1":
+    try:
+        import debugpy
+
+        debug_port = int(os.getenv("DEBUGPY_PORT", "5679"))
+        print(f"🔧 [db-service] Waiting for debugger attach on 0.0.0.0:{debug_port}...")
+        debugpy.listen(("0.0.0.0", debug_port))
+        debugpy.wait_for_client()
+        print("✅ [db-service] Debugger attached!")
+    except Exception as e:
+        print(f"⚠️ [db-service] Failed to start debugpy: {e}")
 
 
 settings = get_settings()
@@ -25,7 +40,7 @@ app = FastAPI(
     description="Database access layer for Travel AI Platform",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # CORS middleware (allow other services to call this API)
@@ -47,7 +62,6 @@ logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
-
 # Register routes
 app.include_router(health)
 app.include_router(thread_routes)
@@ -62,10 +76,10 @@ async def startup_event():
     print("🚀 Starting DB Service...")
     print(f"📍 Environment: {settings.ENVIRONMENT}")
     print(f"🔗 Database: {settings.DATABASE_URL.split('@')[1]}")  # Hide password
-    
+
     # Create tables if they don't exist
     init_db()
-    
+
     print(f"✅ DB Service ready on port {settings.SERVICE_PORT}")
 
 
@@ -82,5 +96,5 @@ async def root():
         "service": "db-service",
         "version": "1.0.0",
         "status": "running",
-        "docs": "/docs"
+        "docs": "/docs",
     }

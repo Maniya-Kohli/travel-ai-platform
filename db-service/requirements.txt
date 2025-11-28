@@ -19,4 +19,5 @@ langchain-community
 langchain-chroma
 langchain_huggingface
 torch
+debugpy
 

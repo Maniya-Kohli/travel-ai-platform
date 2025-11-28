@@ -35,81 +35,109 @@ class RawDestination(BaseModel):
     region_code: Optional[str] = None
 
 class RawRequest(BaseModel):
-    thread_id: Optional[str] = None
-    message_id: Optional[str] = None
-    request_id: Optional[str] = None
+    thread_id: str
+    message_id: str
+    request_id: str
     dates: Optional[RawDates] = None
     destination: Optional[RawDestination] = None
     origin: Optional[RawDestination] = None
     user_filters: Optional[RawUserFilters] = None
     question: Optional[str] = None
     constraints: Optional[Dict[str, Any]] = None
+    content : str
 
 
 # ---------- Normalized shapes (what downstream relies on) ----------
 class TimeBlock(BaseModel):
-    start: date
-    end: date
-    days: int
-    nights: int
+    start: Optional[date]
+    end: Optional[date]
+    days: Optional[int]
+    nights: Optional[int]
     season_hint: Optional[Literal["WINTER", "SPRING", "SUMMER", "FALL"]] = None
 
 class Transport(BaseModel):
-    allowed: List[str]
-    forbidden: List[str] = []
-    intercity_travel: bool = False
+    allowed: Optional[List[str]] = None
+    forbidden: Optional[List[str]] = None
+    intercity_travel: Optional[bool] = None
+
 
 class LodgingPref(BaseModel):
-    types: List[str]
-    pet_friendly_required: bool = False
-    amenities_prefer: List[str] = []
+    types: Optional[List[str]] = None
+    pet_friendly_required: Optional[bool] = None
+    amenities_prefer: Optional[List[str]] = None
 
 class Budget(BaseModel):
-    band: str
-    ceiling_total: int
-    per_day: int
+    band: Optional[str]
+    ceiling_total: Optional[int]
+    per_day: Optional[int]
 
 class Constraints(BaseModel):
-    trip_types: List[str]
-    difficulty: Dict[str, str]  # {"level": "EASY", "effort_profile": "LOW"}
-    transport: Transport
-    lodging: LodgingPref
-    diet: List[str] = []
-    themes: List[str] = []
-    poi_tags: Dict[str, List[str]] = {"must_include": [], "must_exclude": []}
-    budget: Budget
-    events_only: bool = False
+    trip_types: Optional[List[str]] = None
+    difficulty: Optional[Dict[str, str]] = None  # {"level": "EASY", "effort_profile": "LOW"}
+    transport: Optional[Transport] = None
+    lodging: Optional[LodgingPref] = None
+    diet: Optional[List[str]] = None
+    themes: Optional[List[str]] = None
+    poi_tags: Optional[Dict[str, List[str]]] = None  
+    budget: Optional[Budget] = None
+    events_only: Optional[bool] = None
+
 
 class GeoScope(BaseModel):
-    destination: RawDestination                      # effective destination (clamped to CA)
+    destination: Optional[RawDestination] = None
     origin: Optional[RawDestination] = None
-    in_scope_only: bool = True                       # always True in v0
-    out_of_scope: bool = False                       # True if user asked outside CA
+    in_scope_only: Optional[bool] = True                 # can be overridden / omitted
+    out_of_scope: Optional[bool] = False                 # True if user asked outside CA
     original_destination: Optional[RawDestination] = None  # what user asked
 
 
 class NormalizedMessage(BaseModel):
     type: Literal["normalized_message"] = "normalized_message"
     version: Literal["v1"] = "v1"
-    thread_id: str
-    message_id: str
-    time: TimeBlock
-    geoscope: GeoScope
-    constraints: Constraints
+
+    thread_id: Optional[str] = None
+    message_id: Optional[str] = None
+    time: Optional[TimeBlock] = None
+    geoscope: Optional[GeoScope] = None
+    constraints: Optional[Constraints] = None
 
     @field_validator("constraints")
     @classmethod
-    def clamp_enums(cls, v: Constraints):
-        # Trip types
-        v.trip_types = [t for t in v.trip_types or [] if t in S.SUPPORTED_TRIP_TYPES] or ["CAMPING"]
-        # Difficulty
-        lvl = (v.difficulty or {}).get("level", "EASY")
+    def clamp_enums(cls, v: Optional[Constraints]) -> Optional[Constraints]:
+        # If there are no constraints, nothing to clamp
+        if v is None:
+            return v
+
+        # --- Trip types ---
+        v.trip_types = [t for t in (v.trip_types or []) if t in S.SUPPORTED_TRIP_TYPES]
+
+        # --- Difficulty ---
+        # ensure difficulty is at least a dict
+        if v.difficulty is None:
+            v.difficulty = {}
+
+        lvl = v.difficulty.get("level", "EASY")
         if lvl not in S.SUPPORTED_DIFFICULTY:
+            # reset difficulty to safe defaults
             v.difficulty["level"] = "EASY"
             v.difficulty["effort_profile"] = "LOW"
-        # Transport
-        v.transport.allowed = [m for m in v.transport.allowed or [] if m in S.SUPPORTED_TRAVEL_MODES] or ["CAR"]
-        # Lodging
-        v.lodging.types = [a for a in v.lodging.types or [] if a in S.SUPPORTED_ACCOM] or ["CAMPING"]
-        v.lodging.amenities_prefer = [a for a in v.lodging.amenities_prefer or [] if a in S.SUPPORTED_AMENITIES]
+
+        # --- Transport ---
+        if v.transport is not None:
+            v.transport.allowed = [
+                m for m in (v.transport.allowed or [])
+                if m in S.SUPPORTED_TRAVEL_MODES
+            ]
+
+        # --- Lodging ---
+        if v.lodging is not None:
+            v.lodging.types = [
+                a for a in (v.lodging.types or [])
+                if a in S.SUPPORTED_ACCOM
+            ]
+            v.lodging.amenities_prefer = [
+                a for a in (v.lodging.amenities_prefer or [])
+                if a in S.SUPPORTED_AMENITIES
+            ]
+
         return v

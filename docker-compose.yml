@@ -24,9 +24,13 @@ services:
     environment:
       - REDIS_URL=redis://redis:6379
       - DB_SERVICE_URL=http://db-service:8001
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # 👈 add this back if worker calls OpenAI
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GEMINI_MODEL_NAME=gemini-flash-latest
+      - PYTHONUNBUFFERED=1 # 👈 unbuffered logs for better debugging
+      - LOG_LEVEL=DEBUG # 👈 if your logging config uses this
+      - ENABLE_DEBUGPY=1 # 👈 turn on debug hook in app.main
+      - DEBUGPY_PORT=5680 # 👈 worker debug port
     depends_on:
       redis:
         condition: service_healthy
@@ -35,11 +39,12 @@ services:
     networks:
       - travel-ai-network
     ports:
-      - "8002:8002" # 👈 expose worker HTTP API
-    # Dev-only live reload (optional):
-    # volumes:
-    #   - ./worker-service/app:/app/app
-    #   - ./platform_common:/app/platform_common
+      - "8002:8002" # if worker exposes HTTP
+      - "5680:5680" # 👈 expose worker debug port
+    volumes:
+      - ./worker-service/app:/app/app
+      - ./platform_common:/app/platform_common
+    # No command override: Dockerfile has CMD ["python", "-m", "app.main"]
 
   # PostgreSQL - Main Database
   postgres:
@@ -69,21 +74,31 @@ services:
     container_name: travel-ai-db
     ports:
       - "8001:8001"
+      - "5679:5679" # 👈 db-service debug port
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/travel_ai
       - SERVICE_PORT=8001
       - ENVIRONMENT=development
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - VECTOR_PERSIST_DIR=/data/chroma
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - ENABLE_DEBUGPY=1 # 👈 enable debugpy in db-service main
+      - DEBUGPY_PORT=5679
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - travel-ai-network
-    # Dev-only live reload (optional):
-    # volumes:
-    #   - ./db-service/app:/app/app
-    #   - ./platform_common:/app/platform_common
+    volumes:
+      - ./db-service/app:/app/app
+      - ./platform_common:/app/platform_common
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8001
+      --reload
+      --no-access-log
+      --log-level debug
 
   # Frontend
   frontend:
@@ -93,9 +108,9 @@ services:
       - "3000:3000"
     networks:
       - travel-ai-network
-    # Uncomment below line for live reload in dev
-    # volumes:
-    #   - ./frontend:/app
+    volumes:
+      - ./frontend:/app
+    command: ["npm", "run", "dev"] # already in debug/dev mode
 
   # Gateway service
   gateway-service:
@@ -105,19 +120,30 @@ services:
     container_name: travel-ai-gateway
     ports:
       - "8000:8000"
+      - "5678:5678" # 👈 gateway debug port
     environment:
       - SERVICE_PORT=8000
       - REDIS_URL=redis://redis:6379
       - ENVIRONMENT=development
       - DB_SERVICE_URL=http://db-service:8001
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - ENABLE_DEBUGPY=1
+      - DEBUGPY_PORT=5678
     depends_on:
       - redis
     networks:
       - travel-ai-network
-    # Dev-only live reload (optional):
-    # volumes:
-    #   - ./gateway-service/app:/app/app
-    #   - ./platform_common:/app/platform_common
+    volumes:
+      - ./gateway-service/app:/app/app
+      - ./platform_common:/app/platform_common
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --no-access-log
+      --log-level debug
 
 networks:
   travel-ai-network:

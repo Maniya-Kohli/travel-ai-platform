@@ -43,9 +43,14 @@ type TripPlan = {
   }[];
 };
 type ChatMessage =
-  | { sender: "user"; kind: "text"; text: string }
-  | { sender: "assistant"; kind: "text"; text: string }
-  | { sender: "assistant"; kind: "trip_plan"; plan: TripPlan };
+  | { sender: "user"; kind: "text"; text: string; messageId?: string }
+  | { sender: "assistant"; kind: "text"; text: string; messageId?: string }
+  | {
+      sender: "assistant";
+      kind: "trip_plan";
+      plan: TripPlan;
+      messageId?: string;
+    };
 
 // ---------------- Helpers ----------------
 
@@ -57,6 +62,7 @@ function formatEnumLabel(value: string | null | undefined): string {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
+
 function formatBudgetBand(band: string | null | undefined): string {
   if (!band) return "Any budget";
   const map: Record<string, string> = {
@@ -72,62 +78,83 @@ function formatTripTypes(types: string[] | undefined): string {
   return types.map(formatEnumLabel).join(" • ");
 }
 function summarizeTripPlan(plan: TripPlan) {
+  const hasItinerary =
+    Array.isArray(plan.itinerary) && plan.itinerary.length > 0;
+  const lodging = plan.lodging as any | null; // if your type is looser / optional
+
   return (
     <>
-      Here’s your personalized itinerary for{" "}
-      <strong>{plan.destination || "your destination"}</strong> – a {plan.days}
-      -day {formatTripTypes(plan.trip_types).toLowerCase()} (
-      {formatBudgetBand(plan.budget_band)},{" "}
-      {formatEnumLabel(plan.difficulty).toLowerCase()} difficulty).
-      <br />
-      <br />
-      {plan.window_summary && (
+      {/* Itinerary days – only if present */}
+      {hasItinerary &&
+        plan.itinerary!.map((day, idx) => {
+          const hasHighlights =
+            Array.isArray(day.highlights) && day.highlights.length > 0;
+          const hasActivities =
+            Array.isArray(day.activities) && day.activities.length > 0;
+
+          // if this day is completely empty, skip it
+          if (!day.title && !hasHighlights && !hasActivities) {
+            return null;
+          }
+
+          return (
+            <div key={day.day ?? idx}>
+              {/* Day title */}
+              {day.title && (
+                <>
+                  <strong>{day.title}</strong>
+                  <br />
+                </>
+              )}
+
+              {/* Highlights – plain list from backend */}
+              {hasHighlights && (
+                <>
+                  {day.highlights!.join(", ")}
+                  <br />
+                </>
+              )}
+
+              {/* Activities – show name + description if present */}
+              {hasActivities &&
+                day.activities!.map((a: any, aIdx: number) => {
+                  if (!a?.name && !a?.description) return null;
+                  return (
+                    <div key={aIdx}>
+                      {a.name}
+                      {a.description ? `: ${a.description}` : ""}
+                    </div>
+                  );
+                })}
+
+              <br />
+            </div>
+          );
+        })}
+
+      {/* Lodging – only if any field is present */}
+      {lodging && (lodging.name || lodging.type || lodging.notes) && (
         <>
-          {plan.window_summary}
-          <br />
-          <br />
-        </>
-      )}
-      {plan.itinerary.map((day) => (
-        <div key={day.day}>
-          <strong>
-            Day {day.day}: {day.title}
-          </strong>
-          <br />
-          {day.highlights && day.highlights.length > 0 && (
+          {lodging.name && (
             <>
-              Highlights: {day.highlights.join(", ")}
+              {lodging.name}
+              {lodging.type ? ` (${lodging.type})` : ""}
               <br />
             </>
           )}
-          {day.activities &&
-            day.activities.length > 0 &&
-            day.activities.map((a, idx) => (
-              <div key={idx}>
-                • {a.name}
-                {a.description ? `: ${a.description}` : ""}
-              </div>
-            ))}
-          <br />
-        </div>
-      ))}
-      {plan.lodging && plan.lodging.name && (
-        <>
-          Suggested lodging: {plan.lodging.name} (
-          {plan.lodging.type || "accommodation"})
-          {plan.lodging.notes ? ` – ${plan.lodging.notes}` : ""}
-          <br />
+          {lodging.notes && (
+            <>
+              {lodging.notes}
+              <br />
+            </>
+          )}
         </>
       )}
+
+      {/* Weather – direct from backend */}
       {plan.weather_hint && (
         <>
-          Weather: {plan.weather_hint}
-          <br />
-        </>
-      )}
-      {plan.closing_tips && (
-        <>
-          Tips: {plan.closing_tips}
+          {plan.weather_hint}
           <br />
         </>
       )}
@@ -353,16 +380,30 @@ export default function HomePage() {
     const poll = async () => {
       if (cancelled) return;
       try {
+        // 🔹 Build query params with last seen message id
+        const params = new URLSearchParams({ thread_id: threadId! });
+        if (latestAssistantId) {
+          params.set("after_message_id", latestAssistantId);
+        }
+
         const res = await fetch(
-          `http://localhost:8000/trip/latest?thread_id=${threadId}`
+          `http://localhost:8000/trip/latest?${params.toString()}`
         );
         const data = await res.json();
         if (cancelled) return;
+
+        // 🔹 If backend says "nothing new", just schedule next poll
+        if (data.status === "no_new_message") {
+          setTimeout(poll, 1500);
+          return;
+        }
+
         if (data.status === "ok" && data.message) {
           const msg = data.message;
           const msgId = msg.id ?? msg.message_id;
           if (msgId && msgId !== latestAssistantId) {
             const content = msg.content;
+
             // 1) structured trip plan
             if (
               content &&
@@ -375,7 +416,7 @@ export default function HomePage() {
                   sender: "assistant",
                   kind: "trip_plan",
                   plan: content as TripPlan,
-                  messageId: msgId, // <-- add this field
+                  messageId: msgId,
                 },
               ]);
             } else {
@@ -394,20 +435,25 @@ export default function HomePage() {
                   sender: "assistant",
                   kind: "text",
                   text: `${text}\n\nMessage ID: ${msgId}`,
-                  messageId: msgId, // <-- add this field
+                  messageId: msgId,
                 },
               ]);
             }
+
+            // 🔹 update cursor & stop waiting
             setLatestAssistantId(msgId);
             setWaitingForReply(false);
             return;
           }
         }
+
+        // If we got here but no new message, keep polling
         setTimeout(poll, 1500);
       } catch (err) {
         setTimeout(poll, 3000);
       }
     };
+
     poll();
     return () => {
       cancelled = true;

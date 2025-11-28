@@ -26,6 +26,7 @@ class TripOrchestrator:
         try:
             # Step 1: Normalize request
             normalized = await self.request_handler.normalize(raw_request)
+            print(normalized)
             json_ready = normalized.model_dump(mode="json")
 
             await self.db_client.create_normalised_message(
