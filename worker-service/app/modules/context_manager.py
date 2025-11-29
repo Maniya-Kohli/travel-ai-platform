@@ -348,7 +348,7 @@ class ContextManager:
                 m["message_id"] for m in recent if m.get("message_id")
             ],
             "window_summary": window_summary,
-            "last_user": last_user,  # 👈 expose explicitly for the LLM layer
+            "last_user_message": last_user,  # 👈 expose explicitly for the LLM layer
             "long_term_memories": long_term_memories,
             "used_memory_ids": used_memory_ids,
             "constraints": constraints,
