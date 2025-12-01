@@ -1,6 +1,7 @@
 # app/modules/context_manager.py
 from __future__ import annotations
 from typing import Any, Dict, List
+from datetime import datetime
 
 from app.config import get_settings
 from app.clients.db_service_client import DBServiceClient
@@ -15,6 +16,55 @@ def to_dict(obj):
     if hasattr(obj, "model_dump"):
         return obj.model_dump(mode="json")
     return obj
+
+
+def _extract_message_text(m: Dict[str, Any]) -> str:
+    """
+    Best-effort extraction of a human-readable text string from a message row.
+
+    - Prefer `text` (what FE should set for user/assistant chat text).
+    - Fall back to string `content`.
+    - If `content` is a dict (e.g. trip_plan JSON), try some common fields.
+    - Never return dicts; always return a string.
+    """
+    text = m.get("text")
+    if isinstance(text, str) and text.strip():
+        return text.strip()
+
+    content = m.get("content")
+
+    # Raw string content
+    if isinstance(content, str) and content.strip():
+        return content.strip()
+
+    # Content is structured JSON
+    if isinstance(content, dict):
+        for key in [
+            "text",
+            "raw_text",
+            "query",
+            "user_query",
+            "intro_text",
+            "summary",
+            "content",
+        ]:
+            val = content.get(key)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+
+    return ""
+
+
+def _created_at_key(m: Dict[str, Any]) -> str:
+    """
+    Normalize created_at for sorting. Works with datetime or ISO8601 strings.
+    """
+    ts = m.get("created_at")
+    if isinstance(ts, datetime):
+        return ts.isoformat()
+    if isinstance(ts, str):
+        return ts
+    return ""
 
 
 class ContextManager:
@@ -65,11 +115,7 @@ class ContextManager:
                     rec = {
                         "message_id": m.get("message_id") or m.get("id"),
                         "role": m.get("role"),
-                        "text": (
-                            m.get("text")
-                            if m.get("text") is not None
-                            else m.get("content")
-                        ),
+                        "text": _extract_message_text(m),
                         "created_at": m.get("created_at"),
                     }
                     logger.debug("CTX: recent message=%s", rec)
@@ -82,18 +128,18 @@ class ContextManager:
                 "CTX: normalized_message has no thread_id, skipping recent history"
             )
 
-        # ---- 2) Determine last_user (with fallback for first message) ----
+        # ---- 2) Determine last_user (prefer DB history; fallback only if needed) ----
         logger.info("CTX: building window summary & last_user...")
 
-        last_user = next(
-            (m for m in reversed(recent) if m.get("role") == "user"),
-            None,
-        )
-
-        # Fallback for first message / empty history:
-        if last_user is None:
+        # Prefer the most recent *user* message from DB history
+        user_messages = [m for m in recent if m.get("role") == "user"]
+        last_user = None
+        if user_messages:
+            # Use created_at instead of relying on DB ordering
+            last_user = max(user_messages, key=_created_at_key)
+        else:
             logger.info(
-                "CTX: no last_user from recent; trying to synthesize from normalized_message"
+                "CTX: no user messages in recent; trying to synthesize from normalized_message"
             )
 
             def _nm_text(n: Dict[str, Any]) -> str:
@@ -348,7 +394,7 @@ class ContextManager:
                 m["message_id"] for m in recent if m.get("message_id")
             ],
             "window_summary": window_summary,
-            "last_user_message": last_user,  # 👈 expose explicitly for the LLM layer
+            "last_user_message": last_user,  # 👈 explicit for the LLM layer
             "long_term_memories": long_term_memories,
             "used_memory_ids": used_memory_ids,
             "constraints": constraints,
@@ -365,7 +411,7 @@ class ContextManager:
             },
         }
 
-        print('Context message' ,context_pack )
+        print("Context message", context_pack)
         return context_pack
 
     async def close(self):

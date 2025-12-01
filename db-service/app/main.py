@@ -4,6 +4,7 @@ FastAPI app for database access layer
 """
 import os
 import logging
+import debugpy
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,12 +22,12 @@ from platform_common.logging_config import init_logging
 # 🔧 Optional debugpy attach (controlled by env vars)
 if os.getenv("ENABLE_DEBUGPY", "0") == "1":
     try:
-        import debugpy
+       
 
         debug_port = int(os.getenv("DEBUGPY_PORT", "5679"))
         print(f"🔧 [db-service] Waiting for debugger attach on 0.0.0.0:{debug_port}...")
         debugpy.listen(("0.0.0.0", debug_port))
-        debugpy.wait_for_client()
+        # debugpy.wait_for_client()
         print("✅ [db-service] Debugger attached!")
     except Exception as e:
         print(f"⚠️ [db-service] Failed to start debugpy: {e}")
