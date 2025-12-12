@@ -191,58 +191,8 @@ class ContextManager:
                 )
 
         logger.info("CTX: final last_user for thread_id=%s => %s", thread_id, last_user)
-
-        # ---- Window summary (no fake defaults) ----
-        summary_parts: List[str] = []
-
-        # difficulty can be either {"level": "..."} or plain string
-        raw_diff = constraints.get("difficulty")
-        diff = None
-        if isinstance(raw_diff, dict):
-            diff = raw_diff.get("level")
-        elif isinstance(raw_diff, str):
-            diff = raw_diff
-
-        raw_budget = constraints.get("budget")
-        band = None
-        if isinstance(raw_budget, dict):
-            band = raw_budget.get("band")
-        elif isinstance(raw_budget, str):
-            band = raw_budget
-
-        budget_level = constraints.get("budget_level")
-        if not band and isinstance(budget_level, str):
-            band = budget_level
-
-        transport_allowed = (
-            constraints.get("transport", {}).get("allowed") or []
-        )
-        travel_modes = ", ".join(transport_allowed) if transport_allowed else ""
-
-        trip_types_list = constraints.get("trip_types") or []
-        trip_types = ", ".join(trip_types_list) if trip_types_list else ""
-
-        if trip_types:
-            summary_parts.append(trip_types)
-        if diff:
-            summary_parts.append(f"difficulty {diff}")
-        if band:
-            summary_parts.append(f"budget {band}")
-        if travel_modes:
-            summary_parts.append(f"travel by {travel_modes}")
-
-        if summary_parts:
-            window_summary = "Recent focus: " + "; ".join(summary_parts) + "."
-        else:
-            window_summary = ""
-
-        if last_user and last_user.get("text"):
-            # Append last user text if we have it
-            preview = last_user["text"][:120]
-            if window_summary:
-                window_summary += f" Last user: {preview}..."
-            else:
-                window_summary = f"Last user: {preview}..."
+        # ---- 2b) Window summary (single source of truth: current constraints + time) ----
+        window_summary = self._build_window_summary(constraints, time_block, last_user)
 
         # ---- 3) Long-term memory via db-service (vector DB proxied there) ----
         logger.info("CTX: creating long-term memories...")
@@ -416,3 +366,87 @@ class ContextManager:
 
     async def close(self):
         await self.db.close()
+    
+    def _build_window_summary(
+        self,
+        constraints: Dict[str, Any],
+        time_block: Dict[str, Any],
+        last_user: Dict[str, Any] | None,
+    ) -> str:
+        """
+        Build a human-readable window summary that reflects the *current* constraints
+        (trip types, difficulty, budget, transport, duration/time) plus a preview of
+        the last user message.
+
+        This is the single place where we describe the current state to the LLM.
+        """
+        summary_parts: List[str] = []
+
+        # ---- Trip types, difficulty, budget, transport (same logic as before) ----
+        trip_types_list = constraints.get("trip_types") or []
+        trip_types = ", ".join(trip_types_list) if trip_types_list else ""
+
+        raw_diff = constraints.get("difficulty")
+        diff = None
+        if isinstance(raw_diff, dict):
+            diff = raw_diff.get("level")
+        elif isinstance(raw_diff, str):
+            diff = raw_diff
+
+        raw_budget = constraints.get("budget")
+        band = None
+        if isinstance(raw_budget, dict):
+            band = raw_budget.get("band")
+        elif isinstance(raw_budget, str):
+            band = raw_budget
+
+        budget_level = constraints.get("budget_level")
+        if not band and isinstance(budget_level, str):
+            band = budget_level
+
+        transport_allowed = (constraints.get("transport", {}) or {}).get("allowed") or []
+        travel_modes = ", ".join(transport_allowed) if transport_allowed else ""
+
+        if trip_types:
+            summary_parts.append(trip_types)
+        if diff:
+            summary_parts.append(f"difficulty {diff}")
+        if band:
+            summary_parts.append(f"budget {band}")
+        if travel_modes:
+            summary_parts.append(f"travel by {travel_modes}")
+
+        # ---- Time / duration block (NEW) ----
+        days = time_block.get("days")
+        start = time_block.get("start")
+        end = time_block.get("end")
+        season_hint = time_block.get("season_hint")
+
+        # Only one of these will normally apply
+        if isinstance(days, int) and days > 0:
+            summary_parts.append(f"{days}-day trip")
+        elif start and end:
+            summary_parts.append(f"dates {start} \u2192 {end}")  # → arrow
+        else:
+            # Explicitly tell the model that duration is not fixed right now.
+            summary_parts.append("duration not specified")
+
+        if season_hint:
+            summary_parts.append(f"season: {season_hint}")
+
+        # ---- Build base sentence ----
+        if summary_parts:
+            window_summary = "Recent focus: " + "; ".join(summary_parts) + "."
+        else:
+            window_summary = ""
+
+        # ---- Append last user preview ----
+        if last_user and last_user.get("text"):
+            preview = last_user["text"][:120]
+            if window_summary:
+                window_summary += f" Last user: {preview}..."
+            else:
+                window_summary = f"Last user: {preview}..."
+
+        return window_summary
+

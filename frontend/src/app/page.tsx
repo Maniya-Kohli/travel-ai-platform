@@ -12,7 +12,6 @@ type Filters = {
   travel_modes?: string[];
   accommodation?: string[];
   accessibility?: string[];
-  meal_preferences?: string[];
   must_include?: string[];
   must_exclude?: string[];
   interest_tags?: string[];
@@ -853,50 +852,6 @@ export default function HomePage() {
                   }
                 />
                 <span>{formatEnumLabel(tag)}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Meal preferences */}
-        <div style={{ marginBottom: 14 }}>
-          <div
-            style={{
-              fontWeight: 500,
-              color: "#d8d8e3",
-              marginBottom: 6,
-              fontSize: ".9rem",
-            }}
-          >
-            Meal Preferences
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {["VEGETARIAN", "VEGAN", "GLUTEN_FREE", "NONE"].map((mp) => (
-              <label
-                key={mp}
-                style={{
-                  fontSize: ".9rem",
-                  color: "#a7a7bb",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={(filters.meal_preferences ?? []).includes(mp)}
-                  onChange={(e) =>
-                    setFilters((f) => ({
-                      ...f,
-                      meal_preferences: e.target.checked
-                        ? [...(f.meal_preferences ?? []), mp]
-                        : (f.meal_preferences ?? []).filter(
-                            (m: string) => m !== mp
-                          ),
-                    }))
-                  }
-                />
-                <span>{formatEnumLabel(mp)}</span>
               </label>
             ))}
           </div>
