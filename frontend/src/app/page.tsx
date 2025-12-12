@@ -43,6 +43,12 @@ type TripPlan = {
   }[];
 };
 
+const DB_SERVICE_URL =
+  process.env.NEXT_PUBLIC_DB_SERVICE_URL || "http://localhost:8001";
+
+const GETEWAY_SERVICE_URL =
+  process.env.NEXT_PUBLIC_GETEWAY_SERVICE_URL || "http://localhost:8000";
+
 type ChatMessage =
   | { sender: "user"; kind: "text"; text: string; messageId?: string }
   | { sender: "assistant"; kind: "text"; text: string; messageId?: string }
@@ -347,7 +353,8 @@ export default function HomePage() {
           : null;
       if (savedId) {
         try {
-          const resp = await fetch("http://localhost:8001/threads");
+          // const resp = await fetch("http://localhost:8001/threads");
+          const resp = await fetch(`${DB_SERVICE_URL}/threads`);
           const data = await resp.json();
           const exists = data.some((t: { id: string }) => t.id === savedId);
           if (exists) {
@@ -363,9 +370,11 @@ export default function HomePage() {
           );
         }
       }
-      const res = await fetch("http://localhost:8001/threads", {
-        method: "POST",
-      });
+      // const res = await fetch("http://localhost:8001/threads", {
+      //   method: "POST",
+      // });
+      const res = await fetch(`${DB_SERVICE_URL}/threads`, { method: "POST" });
+
       const data = await res.json();
       setThreadId(data.id);
       localStorage.setItem("thread_id", data.id);
@@ -381,9 +390,7 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("thread_id");
     }
-    const res = await fetch("http://localhost:8001/threads", {
-      method: "POST",
-    });
+    const res = await fetch(`${DB_SERVICE_URL}/threads`, { method: "POST" });
     const data = await res.json();
     setThreadId(data.id);
     if (typeof window !== "undefined") {
@@ -404,8 +411,9 @@ export default function HomePage() {
         }
 
         const res = await fetch(
-          `http://localhost:8000/trip/latest?${params.toString()}`
+          `${GETEWAY_SERVICE_URL}/trip/latest?${params.toString()}`
         );
+
         const data = await res.json();
         if (cancelled) return;
 
@@ -478,7 +486,7 @@ export default function HomePage() {
     setChat((prev) => [...prev, { sender: "user", kind: "text", text: input }]);
     setLoading(true);
     try {
-      const saveMessageRes = await fetch("http://localhost:8001/messages", {
+      const saveMessageRes = await fetch(`${DB_SERVICE_URL}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -496,7 +504,7 @@ export default function HomePage() {
         constraints: filters,
         content: input,
       };
-      const res = await fetch("http://localhost:8000/trip/plan", {
+      const res = await fetch(`${GETEWAY_SERVICE_URL}/trip/plan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
