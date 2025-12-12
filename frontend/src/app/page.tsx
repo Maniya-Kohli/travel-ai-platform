@@ -49,6 +49,8 @@ const DB_SERVICE_URL =
 const GETEWAY_SERVICE_URL =
   process.env.NEXT_PUBLIC_GETEWAY_SERVICE_URL || "http://localhost:8000";
 
+console.log("GW URL (client):", GETEWAY_SERVICE_URL);
+
 type ChatMessage =
   | { sender: "user"; kind: "text"; text: string; messageId?: string }
   | { sender: "assistant"; kind: "text"; text: string; messageId?: string }

@@ -1,0 +1,123 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: travel-ai-redis
+    networks:
+      - travel-ai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: travel-ai-postgres
+    environment:
+      POSTGRES_DB: travel_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432" # optional to expose, you can remove if not needed externally
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - travel-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  db-service:
+    build:
+      context: .
+      dockerfile: db-service/Dockerfile
+    container_name: travel-ai-db
+    ports:
+      - "8001:8001" # public endpoint for db-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/travel_ai
+      - SERVICE_PORT=8001
+      - ENVIRONMENT=production
+      - VECTOR_PERSIST_DIR=/data/chroma
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - travel-ai-network
+    volumes:
+      - ./db-service/app:/app/app
+      - ./platform_common:/app/platform_common
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8001
+      --no-access-log
+      --log-level info
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: travel-ai-gateway
+    ports:
+      - "8000:8000" # public endpoint for gateway
+    environment:
+      - SERVICE_PORT=8000
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=production
+      - DB_SERVICE_URL=http://db-service:8001
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - redis
+      - db-service
+    networks:
+      - travel-ai-network
+    volumes:
+      - ./gateway-service/app:/app/app
+      - ./platform_common:/app/platform_common
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --no-access-log
+      --log-level info
+
+  worker-service:
+    build:
+      context: .
+      dockerfile: worker-service/Dockerfile
+    container_name: travel-ai-worker
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DB_SERVICE_URL=http://db-service:8001
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL_NAME=gemini-flash-latest
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    depends_on:
+      redis:
+        condition: service_healthy
+      db-service:
+        condition: service_started
+    networks:
+      - travel-ai-network
+    volumes:
+      - ./worker-service/app:/app/app
+      - ./platform_common:/app/platform_common
+
+networks:
+  travel-ai-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
