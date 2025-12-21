@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.utils.queue_consumer import QueueConsumer
 from app.orchestrator import TripOrchestrator
 from platform_common.logging_config import init_logging
+
 import logging
 
 # 🔧 Optional debugpy attach (controlled by env vars)

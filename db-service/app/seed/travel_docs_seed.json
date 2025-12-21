@@ -1,0 +1,958 @@
+{
+  "docs": [
+    {
+      "doc_id": "sf_union_square_holiday_lights",
+      "text": "Union Square (San Francisco) is a classic holiday stop with bright decorations and a seasonal ice rink. Expect heavy crowds on weekend evenings; nearby parking garages exist but fill fast, so BART/Muni is often easier. Dogs are fine outside in the plaza, but keep them leashed and avoid peak crowd crush if your dog is anxious.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Union Square Holiday Lights + Ice Rink",
+        "city": "San Francisco",
+        "tags_csv": "HOLIDAY_LIGHTS,CHRISTMAS,ICE_RINK,DOWNTOWN,PARKING",
+        "tag_1": "HOLIDAY_LIGHTS",
+        "tag_2": "CHRISTMAS",
+        "tag_3": "ICE_RINK",
+        "tag_4": "DOWNTOWN",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sf_ferry_building_holiday_market",
+      "text": "The Ferry Building area is great for a cozy holiday vibe: evening lights, waterfront strolls, and lots of food options. Parking is available in nearby lots/garages, but traffic can be slow on the Embarcadero; arriving earlier makes it smoother. Dogs are allowed outdoors along the waterfront promenade.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Ferry Building Waterfront Holiday Stroll",
+        "city": "San Francisco",
+        "tags_csv": "HOLIDAY,FOOD,WATERFRONT,WALKABLE,PARKING",
+        "tag_1": "HOLIDAY",
+        "tag_2": "FOOD",
+        "tag_3": "WATERFRONT",
+        "tag_4": "WALKABLE",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sf_golden_gate_park_winter_walk",
+      "text": "Golden Gate Park is a relaxed winter escape for long walks with your dog, with plenty of open space and calmer paths than downtown. Parking can be easier near quieter entrances (especially on weekday mornings), but popular attractions can still cause congestion. Keep dogs leashed where posted and watch for cyclists on shared paths.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Golden Gate Park Winter Walk",
+        "city": "San Francisco",
+        "tags_csv": "PARK,DOG_FRIENDLY,EASY_WALK,NATURE,PARKING",
+        "tag_1": "PARK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "EASY_WALK",
+        "tag_4": "NATURE",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sf_pier_39_holiday_tree",
+      "text": "Pier 39 is loud, busy, and very festive around the holidays, with a big tree and decorations plus sea lions nearby. Parking garages are close but expensive, and traffic can be slow in Fisherman’s Wharf—public transit or early arrival helps. Dogs are okay outside on-leash, but it can be overwhelming for sensitive pets.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Pier 39 Holiday Tree + Sea Lions",
+        "city": "San Francisco",
+        "tags_csv": "HOLIDAY,TREE,TOURISTY,CROWDS,PARKING",
+        "tag_1": "HOLIDAY",
+        "tag_2": "TREE",
+        "tag_3": "TOURISTY",
+        "tag_4": "CROWDS",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sausalito_winter_waterfront_date",
+      "text": "Sausalito is a cozy, romantic winter day trip north of SF with waterfront views, coffee stops, and easy strolling. Parking can be tight near the main waterfront; use public lots and plan a short walk. Dogs are welcome outside and on many patios—bring a light jacket for breezy waterfront weather.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Sausalito Cozy Waterfront Stroll",
+        "city": "Sausalito",
+        "tags_csv": "ROMANTIC,COZY,WATERFRONT,NORTH_OF_SF,PARKING",
+        "tag_1": "ROMANTIC",
+        "tag_2": "COZY",
+        "tag_3": "WATERFRONT",
+        "tag_4": "NORTH_OF_SF",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "marin_muir_beach_dog_walk",
+      "text": "Muir Beach in Marin is a quiet, scenic stop for ocean air and a calmer alternative to crowded city spots. Parking is limited; arrive early (especially weekends). Dogs are generally allowed on-leash on the beach and surrounding areas, but always follow posted rules and be mindful of wildlife.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Muir Beach Calm Dog Walk",
+        "city": "Marin",
+        "tags_csv": "BEACH,DOG_FRIENDLY,EASY,NORTH_OF_SF,LIMITED_PARKING",
+        "tag_1": "BEACH",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "EASY",
+        "tag_4": "NORTH_OF_SF",
+        "tag_5": "LIMITED_PARKING"
+      }
+    },
+    {
+      "doc_id": "marin_point_reyes_tomales_bay_views",
+      "text": "Point Reyes area has dramatic coastal views and peaceful winter vibes, but many protected trails restrict dogs. For a dog-friendly option, focus on overlooks and roadside viewpoints, and consider a low-key stop around Tomales Bay. Parking at popular trailheads and overlooks fills quickly on weekends; go early.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "pet_friendly": false,
+        "title": "Point Reyes Pet Restrictions + Viewpoint Strategy",
+        "city": "Point Reyes",
+        "tags_csv": "COAST,VIEWS,DOG_RULES,NORTH_OF_SF,PARKING",
+        "tag_1": "COAST",
+        "tag_2": "VIEWS",
+        "tag_3": "DOG_RULES",
+        "tag_4": "NORTH_OF_SF",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "oakland_lake_merritt_evening_lights_walk",
+      "text": "Lake Merritt is a great evening stroll with city views and a lively vibe; it can feel festive in December with events nearby. Parking is usually possible around the lake but varies by side and time; avoid leaving valuables visible. Dogs are welcome on-leash on the main path.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Lake Merritt Evening Walk",
+        "city": "Oakland",
+        "tags_csv": "EASY_WALK,CITY_VIEWS,DOG_FRIENDLY,PARKING,EVENING",
+        "tag_1": "EASY_WALK",
+        "tag_2": "CITY_VIEWS",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING",
+        "tag_5": "EVENING"
+      }
+    },
+    {
+      "doc_id": "san_jose_christmas_in_the_park",
+      "text": "Christmas in the Park (downtown San Jose) is a big holiday display with lights and decorations, usually best enjoyed after dark. Parking garages are available downtown, but it gets busy on peak nights; transit or earlier arrival helps. Dogs are generally okay in outdoor public areas on-leash, but crowds can be intense.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Christmas in the Park (San Jose)",
+        "city": "San Jose",
+        "tags_csv": "HOLIDAY_LIGHTS,CHRISTMAS,CROWDS,DOWNTOWN,PARKING",
+        "tag_1": "HOLIDAY_LIGHTS",
+        "tag_2": "CHRISTMAS",
+        "tag_3": "CROWDS",
+        "tag_4": "DOWNTOWN",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "peninsula_filoli_holiday_gardens",
+      "text": "Filoli (Woodside) is a polished, romantic holiday option with decorated gardens and an estate setting. Timed-entry is common, and parking is on-site but can bottleneck near peak slots—arrive early. Pets are typically not allowed at many estate garden attractions, so treat this as not dog-friendly unless you confirm for your visit.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "pet_friendly": false,
+        "title": "Filoli Holiday Visits: Timed Entry + Pet Caution",
+        "city": "Woodside",
+        "tags_csv": "ROMANTIC,GARDENS,HOLIDAY,TIMED_ENTRY,PARKING,DOG_RULES",
+        "tag_1": "ROMANTIC",
+        "tag_2": "GARDENS",
+        "tag_3": "HOLIDAY",
+        "tag_4": "TIMED_ENTRY",
+        "tag_5": "PARKING",
+        "tag_6": "DOG_RULES"
+      }
+    },
+    {
+      "doc_id": "half_moon_bay_coastal_bluffs_walk",
+      "text": "Half Moon Bay is an easy coastal escape from SF with bluffs, beaches, and a laid-back winter vibe. Parking is usually easier than SF but still fills on sunny weekends; arrive earlier for the most convenient spots. Dogs are commonly allowed on-leash on coastal paths and many beach areas—check local signage.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Half Moon Bay Coastal Bluffs Walk",
+        "city": "Half Moon Bay",
+        "tags_csv": "COAST,EASY_WALK,DOG_FRIENDLY,SCENIC,PARKING",
+        "tag_1": "COAST",
+        "tag_2": "EASY_WALK",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "SCENIC",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "big_basin_closure_check",
+      "text": "If you’re considering redwoods trips, always verify park status and trail access before you go, as closures and limited access can happen after storms or fire impacts. Build a backup plan (like other nearby redwood parks) so your day doesn’t get derailed.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "title": "Redwoods Trip Rule: Check Closures + Have Backup",
+        "city": "Santa Cruz Mountains",
+        "tags_csv": "REDWOODS,CLOSURES,WINTER,BACKUP_PLAN",
+        "tag_1": "REDWOODS",
+        "tag_2": "CLOSURES",
+        "tag_3": "WINTER",
+        "tag_4": "BACKUP_PLAN"
+      }
+    },
+    {
+      "doc_id": "yosemite_winter_pet_rule",
+      "text": "Yosemite has strict pet rules: dogs are limited to paved areas, roads, and certain campgrounds; most trails are not dog-friendly. In winter, also watch for icy conditions and chain controls on mountain roads. If traveling with a dog, plan viewpoint-focused stops and short paved walks only.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SIERRA",
+        "pet_friendly": false,
+        "title": "Yosemite Winter + Pet Restrictions",
+        "city": "Yosemite",
+        "tags_csv": "YOSEMITE,WINTER,DOG_RULES,CHAINS,VIEWPOINTS",
+        "tag_1": "YOSEMITE",
+        "tag_2": "WINTER",
+        "tag_3": "DOG_RULES",
+        "tag_4": "CHAINS",
+        "tag_5": "VIEWPOINTS"
+      }
+    },
+    {
+      "doc_id": "tahoe_winter_daytrip_warning",
+      "text": "Lake Tahoe can be magical in winter, but it’s weather-dependent: chain controls and slow traffic are common on storm weekends. For a day trip, start very early and have a turnaround time; for an overnight, book lodging ahead. Many snowy trail areas are not ideal for unprepared dogs—bring warm gear and plan safe, short walks.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SIERRA",
+        "title": "Tahoe Winter Travel Rule: Chains + Early Start",
+        "city": "Lake Tahoe",
+        "tags_csv": "TAHOE,WINTER,CHAINS,TRAFFIC,SAFETY",
+        "tag_1": "TAHOE",
+        "tag_2": "WINTER",
+        "tag_3": "CHAINS",
+        "tag_4": "TRAFFIC",
+        "tag_5": "SAFETY"
+      }
+    },
+    {
+      "doc_id": "napa_yountville_holiday_evening",
+      "text": "Napa Valley and Yountville can feel very festive in December with decorated streets and cozy dining. Parking is usually manageable compared with SF, but popular dinner hours fill lots quickly—reserve meals and arrive early. Dogs are welcome on many patios, but wineries vary; plan mostly outdoor-friendly stops.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Napa / Yountville Cozy Holiday Evening",
+        "city": "Napa",
+        "tags_csv": "WINE,ROMANTIC,COZY,HOLIDAY,PARKING",
+        "tag_1": "WINE",
+        "tag_2": "ROMANTIC",
+        "tag_3": "COZY",
+        "tag_4": "HOLIDAY",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "monterey_carmel_not_north",
+      "text": "Monterey and Carmel are south of San Francisco. If the user explicitly requests a northbound trip, do not suggest Big Sur or Carmel; instead propose Marin, Sonoma, Mendocino, or redwoods options.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "title": "Direction Rule: Northbound means not Big Sur/Carmel",
+        "city": "Bay Area",
+        "tags_csv": "DIRECTION,NORTHBOUND,ROUTING",
+        "tag_1": "DIRECTION",
+        "tag_2": "NORTHBOUND",
+        "tag_3": "ROUTING"
+      }
+    },
+    {
+      "doc_id": "sonoma_square_holiday_town",
+      "text": "Sonoma Plaza (Sonoma Square) is a charming small-town-feel stop in December with a cozy, festive atmosphere and good food nearby. Parking around the plaza is usually easier than in SF but fills during events; arrive earlier for the closest spots. Dogs are welcome outside and at many patios.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Sonoma Plaza Cozy Holiday Stop",
+        "city": "Sonoma",
+        "tags_csv": "HOLIDAY,COZY,SMALL_TOWN,FOOD,PARKING,DOG_FRIENDLY",
+        "tag_1": "HOLIDAY",
+        "tag_2": "COZY",
+        "tag_3": "SMALL_TOWN",
+        "tag_4": "FOOD",
+        "tag_5": "PARKING",
+        "tag_6": "DOG_FRIENDLY"
+      }
+    },
+    {
+      "doc_id": "mendocino_winter_coastal_romance",
+      "text": "Mendocino is a romantic winter coastal getaway north of SF: moody ocean views, cozy inns, and quiet walks. It’s a longer drive, so it fits best as an overnight or weekend rather than a quick evening trip. Parking is generally straightforward in town; bring layers for wind and rain.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "NORTH_COAST",
+        "pet_friendly": true,
+        "title": "Mendocino Winter Coastal Romance",
+        "city": "Mendocino",
+        "tags_csv": "NORTH_OF_SF,ROMANTIC,COZY,COAST,WINTER",
+        "tag_1": "NORTH_OF_SF",
+        "tag_2": "ROMANTIC",
+        "tag_3": "COZY",
+        "tag_4": "COAST",
+        "tag_5": "WINTER"
+      }
+    },
+    {
+      "doc_id": "santa_cruz_boardwalk_holiday_crowds",
+      "text": "Santa Cruz Boardwalk area can be festive, but it’s not always cozy: parking and crowds spike on weekends and special nights. If you go, arrive early and plan a beach walk nearby for a calmer moment. Dogs are generally allowed on-leash on many beach areas, but check restrictions near the main boardwalk zone.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Santa Cruz Rule: Crowds + Arrive Early",
+        "city": "Santa Cruz",
+        "tags_csv": "CROWDS,PARKING,BEACH,DOG_FRIENDLY,HOLIDAY",
+        "tag_1": "CROWDS",
+        "tag_2": "PARKING",
+        "tag_3": "BEACH",
+        "tag_4": "DOG_FRIENDLY",
+        "tag_5": "HOLIDAY"
+      }
+    },
+
+    {
+      "doc_id": "berkeley_tilden_regional_park_walk",
+      "text": "Tilden Regional Park above Berkeley offers easy trails, forested paths, and city views, making it a great low-pressure nature escape. Parking is spread across multiple lots, but popular entrances fill on weekends. Dogs are allowed on-leash on many trails; always check posted signs.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Tilden Regional Park Easy Trails",
+        "city": "Berkeley",
+        "tags_csv": "EASY_HIKE,DOG_FRIENDLY,NATURE,VIEWS,PARKING",
+        "tag_1": "EASY_HIKE",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "NATURE",
+        "tag_4": "VIEWS",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "alameda_island_beach_walk",
+      "text": "Alameda Island has flat, scenic beach paths and a quiet neighborhood feel, ideal for relaxed dog walks and sunsets. Parking is usually available along residential streets near Crown Memorial Beach. Dogs are welcome on-leash in most outdoor areas.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Alameda Island Beach Walk",
+        "city": "Alameda",
+        "tags_csv": "FLAT_WALK,BEACH,DOG_FRIENDLY,SUNSET,PARKING",
+        "tag_1": "FLAT_WALK",
+        "tag_2": "BEACH",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "SUNSET",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sonoma_coast_state_park_views",
+      "text": "Sonoma Coast State Park features dramatic coastal scenery and pull-off viewpoints rather than long hikes. Parking is available at designated overlooks but fills quickly on sunny weekends. Dogs are allowed on-leash in many coastal areas but not on all trails.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Sonoma Coast Scenic Viewpoints",
+        "city": "Sonoma Coast",
+        "tags_csv": "COAST,SCENIC,DOG_FRIENDLY,VIEWPOINTS,LIMITED_PARKING",
+        "tag_1": "COAST",
+        "tag_2": "SCENIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "VIEWPOINTS",
+        "tag_5": "LIMITED_PARKING"
+      }
+    },
+    {
+      "doc_id": "armstrong_redwoods_pet_rule",
+      "text": "Armstrong Redwoods State Natural Reserve offers beautiful redwood groves, but dogs are not allowed on most trails. If traveling with a dog, plan for nearby roadside viewpoints or alternative parks in Sonoma County that allow pets.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "BAY_AREA",
+        "pet_friendly": false,
+        "title": "Armstrong Redwoods Dog Restriction",
+        "city": "Guerneville",
+        "tags_csv": "REDWOODS,DOG_RULES,SONOMA,NATURE",
+        "tag_1": "REDWOODS",
+        "tag_2": "DOG_RULES",
+        "tag_3": "SONOMA",
+        "tag_4": "NATURE"
+      }
+    },
+    {
+      "doc_id": "russian_river_winter_town_stroll",
+      "text": "Towns along the Russian River like Guerneville have a cozy, laid-back winter vibe with cafes and riverside walks. Parking is generally easier than coastal hotspots, though small town centers can still get busy on weekends. Dogs are welcome outdoors in most areas.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Russian River Cozy Winter Stroll",
+        "city": "Guerneville",
+        "tags_csv": "COZY,SMALL_TOWN,DOG_FRIENDLY,WINTER,PARKING",
+        "tag_1": "COZY",
+        "tag_2": "SMALL_TOWN",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "WINTER",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "petaluma_downtown_riverwalk",
+      "text": "Downtown Petaluma offers a pleasant riverwalk, historic buildings, and an easygoing holiday atmosphere. Street parking and public lots are available near the center. Dogs are welcome on-leash along the riverwalk and outdoor patios.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Petaluma Downtown Riverwalk",
+        "city": "Petaluma",
+        "tags_csv": "RIVERWALK,DOG_FRIENDLY,SMALL_TOWN,PARKING",
+        "tag_1": "RIVERWALK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "SMALL_TOWN",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "healdsburg_plaza_evening",
+      "text": "Healdsburg Plaza is compact and festive, especially in winter evenings with lights and restaurants around the square. Parking near the plaza fills quickly during dinner hours, but surrounding streets often have availability. Dogs are welcome outdoors.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Healdsburg Plaza Evening Stroll",
+        "city": "Healdsburg",
+        "tags_csv": "WINE_COUNTRY,COZY,DOG_FRIENDLY,EVENING,PARKING",
+        "tag_1": "WINE_COUNTRY",
+        "tag_2": "COZY",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "EVENING",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "bodega_bay_winter_coastal_stop",
+      "text": "Bodega Bay is a peaceful winter coastal stop with ocean views and short walks near the shoreline. Parking is available at various pull-offs and beaches, but weather can be windy and cold. Dogs are generally allowed on-leash on beaches and paths.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Bodega Bay Winter Coastal Views",
+        "city": "Bodega Bay",
+        "tags_csv": "COAST,WINTER,DOG_FRIENDLY,SCENIC,PARKING",
+        "tag_1": "COAST",
+        "tag_2": "WINTER",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "SCENIC",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "santa_rosa_howarth_park_walk",
+      "text": "Howarth Park in Santa Rosa offers flat walking paths, lakeside views, and a calm atmosphere suitable for dogs. Parking is usually easy within the park. Dogs are allowed on-leash in designated areas.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Howarth Park Easy Walk",
+        "city": "Santa Rosa",
+        "tags_csv": "EASY_WALK,DOG_FRIENDLY,PARK,PARKING",
+        "tag_1": "EASY_WALK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "PARK",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "mount_tamalpais_east_peak_views",
+      "text": "Mount Tamalpais East Peak provides sweeping views of the Bay Area with minimal walking from parking areas. Parking lots near the summit can fill quickly on clear days. Dogs are allowed on-leash in many areas but not all trails.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Mount Tamalpais East Peak Viewpoints",
+        "city": "Marin",
+        "tags_csv": "VIEWS,SCENIC,DOG_FRIENDLY,PARKING,NORTH_OF_SF",
+        "tag_1": "VIEWS",
+        "tag_2": "SCENIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING",
+        "tag_5": "NORTH_OF_SF"
+      }
+    },
+    {
+      "doc_id": "mill_valley_downtown_evening",
+      "text": "Downtown Mill Valley is compact and charming, with lights, cafes, and an easy evening stroll vibe. Parking is available in small public lots and on side streets. Dogs are welcome outdoors on-leash.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Mill Valley Downtown Evening Walk",
+        "city": "Mill Valley",
+        "tags_csv": "COZY,SMALL_TOWN,DOG_FRIENDLY,EVENING,PARKING",
+        "tag_1": "COZY",
+        "tag_2": "SMALL_TOWN",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "EVENING",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "stinson_beach_winter_walk",
+      "text": "Stinson Beach in winter is quieter and ideal for long, peaceful walks along the sand. Parking is easier than summer but still limited near main access points. Dogs are allowed on-leash on the beach.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Stinson Beach Winter Walk",
+        "city": "Stinson Beach",
+        "tags_csv": "BEACH,WINTER,DOG_FRIENDLY,SCENIC,PARKING",
+        "tag_1": "BEACH",
+        "tag_2": "WINTER",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "SCENIC",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "napa_riverfront_winter_stroll",
+      "text": "Napa Riverfront paths offer a calm winter stroll with restaurants and shops nearby. Parking garages and street parking are available, though evenings can be busy. Dogs are welcome on-leash outdoors.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Napa Riverfront Winter Walk",
+        "city": "Napa",
+        "tags_csv": "RIVERWALK,DOG_FRIENDLY,WINE_COUNTRY,PARKING",
+        "tag_1": "RIVERWALK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "WINE_COUNTRY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "sacramento_old_town_holiday",
+      "text": "Old Sacramento has a historic, festive feel during the holidays with lights and riverfront views. Parking garages are nearby, but weekends can be busy. Dogs are generally allowed outdoors on-leash.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "NORTHERN_CA",
+        "pet_friendly": true,
+        "title": "Old Sacramento Holiday Stroll",
+        "city": "Sacramento",
+        "tags_csv": "HOLIDAY,HISTORIC,DOG_FRIENDLY,PARKING",
+        "tag_1": "HOLIDAY",
+        "tag_2": "HISTORIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "folsom_historic_district_evening",
+      "text": "Folsom Historic District offers a small-town evening stroll with decorated streets and restaurants. Parking is generally easier than big cities but fills during events. Dogs are welcome outdoors.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "NORTHERN_CA",
+        "pet_friendly": true,
+        "title": "Folsom Historic District Evening Walk",
+        "city": "Folsom",
+        "tags_csv": "SMALL_TOWN,COZY,DOG_FRIENDLY,EVENING,PARKING",
+        "tag_1": "SMALL_TOWN",
+        "tag_2": "COZY",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "EVENING",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "truckee_winter_town_rule",
+      "text": "Truckee is charming in winter but weather and road conditions can change rapidly. Parking downtown is limited during snowstorms, and sidewalks may be icy. Dogs need winter protection, and short walks are safer than long hikes.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SIERRA",
+        "title": "Truckee Winter Travel Caution",
+        "city": "Truckee",
+        "tags_csv": "WINTER,SNOW,SAFETY,DOG_CARE",
+        "tag_1": "WINTER",
+        "tag_2": "SNOW",
+        "tag_3": "SAFETY",
+        "tag_4": "DOG_CARE"
+      }
+    },
+    {
+      "doc_id": "redwood_regional_park_oakland_trails",
+      "text": "Redwood Regional Park in Oakland offers forested trails with a cooler, shaded feel year-round. Parking lots are spread throughout the park, but some trailheads fill on weekends. Dogs are allowed on-leash on most trails.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Redwood Regional Park Trails",
+        "city": "Oakland",
+        "tags_csv": "REDWOODS,DOG_FRIENDLY,TREKKING,PARKING",
+        "tag_1": "REDWOODS",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "TREKKING",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "santa_clara_central_park_walk",
+      "text": "Central Park in Santa Clara provides flat walking paths and open lawns suitable for relaxed dog walks. Parking is available in nearby lots and streets. It’s a good low-key option when avoiding crowded destinations.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Santa Clara Central Park Walk",
+        "city": "Santa Clara",
+        "tags_csv": "EASY_WALK,DOG_FRIENDLY,PARK,PARKING",
+        "tag_1": "EASY_WALK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "PARK",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "pacifica_coastal_trail_views",
+      "text": "Pacifica’s coastal trails offer ocean views and cooler weather year-round. Parking is available near trailheads but can be limited on sunny days. Dogs are typically allowed on-leash on many coastal paths.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "BAY_AREA",
+        "pet_friendly": true,
+        "title": "Pacifica Coastal Trail Views",
+        "city": "Pacifica",
+        "tags_csv": "COAST,SCENIC,DOG_FRIENDLY,PARKING",
+        "tag_1": "COAST",
+        "tag_2": "SCENIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+
+    {
+      "doc_id": "la_griffith_observatory_views_walk",
+      "text": "Griffith Observatory area offers iconic LA views with short walks and viewpoints rather than long hikes. Parking near the top fills quickly around sunset; consider parking lower and walking up. Dogs are allowed on-leash on many nearby paths but not inside the observatory.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Griffith Observatory Scenic Walks",
+        "city": "Los Angeles",
+        "tags_csv": "VIEWS,ICONIC,DOG_FRIENDLY,SUNSET,PARKING",
+        "tag_1": "VIEWS",
+        "tag_2": "ICONIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "SUNSET",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "la_runyon_canyon_crowds_rule",
+      "text": "Runyon Canyon is popular and crowded, especially weekends and evenings. Parking is limited in surrounding neighborhoods. Dogs are allowed on-leash, but it may not feel cozy or relaxed during peak hours.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Runyon Canyon Crowds + Parking Rule",
+        "city": "Los Angeles",
+        "tags_csv": "CROWDS,PARKING,DOG_FRIENDLY,TREKKING",
+        "tag_1": "CROWDS",
+        "tag_2": "PARKING",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "TREKKING"
+      }
+    },
+    {
+      "doc_id": "santa_monica_pier_evening_stroll",
+      "text": "Santa Monica Pier and the adjacent beach path are lively and festive, especially in the evenings. Parking garages are nearby but can be expensive; street parking is limited. Dogs are allowed on-leash along the beach path, but crowds can be intense.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Santa Monica Pier Evening Stroll",
+        "city": "Santa Monica",
+        "tags_csv": "BEACH,EVENING,DOG_FRIENDLY,CROWDS,PARKING",
+        "tag_1": "BEACH",
+        "tag_2": "EVENING",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "CROWDS",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "venice_canals_quiet_walk",
+      "text": "Venice Canals offer a quieter, romantic walk compared to the main boardwalk. Street parking exists but requires patience. Dogs are allowed on-leash, and mornings or weekdays are the calmest times.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Venice Canals Peaceful Walk",
+        "city": "Venice",
+        "tags_csv": "ROMANTIC,COZY,DOG_FRIENDLY,WALKABLE,PARKING",
+        "tag_1": "ROMANTIC",
+        "tag_2": "COZY",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "WALKABLE",
+        "tag_5": "PARKING"
+      }
+    },
+    {
+      "doc_id": "malibu_solstice_canyon_hike",
+      "text": "Solstice Canyon in Malibu offers a moderate hike with ruins and ocean views. Parking is limited at the trailhead and fills early on weekends. Dogs are allowed on-leash on designated trails.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Solstice Canyon Hike",
+        "city": "Malibu",
+        "tags_csv": "TREKKING,OCEAN_VIEWS,DOG_FRIENDLY,LIMITED_PARKING",
+        "tag_1": "TREKKING",
+        "tag_2": "OCEAN_VIEWS",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "LIMITED_PARKING"
+      }
+    },
+    {
+      "doc_id": "malibu_point_dume_viewpoint",
+      "text": "Point Dume offers dramatic coastal views with short walks rather than long hikes. Parking near the beach and bluff can be limited on sunny days. Dogs are allowed on-leash on some paths and beach areas.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Point Dume Coastal Viewpoint",
+        "city": "Malibu",
+        "tags_csv": "COAST,SCENIC,DOG_FRIENDLY,PARKING",
+        "tag_1": "COAST",
+        "tag_2": "SCENIC",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "laguna_beach_heisler_park",
+      "text": "Heisler Park in Laguna Beach provides manicured paths with ocean views and benches. Parking is metered and fills quickly midday. Dogs are allowed on-leash in the park, but beaches nearby have time-based restrictions.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Heisler Park Ocean Walk",
+        "city": "Laguna Beach",
+        "tags_csv": "OCEAN_VIEWS,EASY_WALK,DOG_FRIENDLY,PARKING",
+        "tag_1": "OCEAN_VIEWS",
+        "tag_2": "EASY_WALK",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "laguna_beach_dog_beach_rule",
+      "text": "Laguna Beach enforces time-based dog access rules on beaches; many beaches prohibit dogs during daytime hours. Always check posted signs to avoid fines.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "Laguna Beach Dog Time Restrictions",
+        "city": "Laguna Beach",
+        "tags_csv": "DOG_RULES,BEACH,TIME_RESTRICTIONS",
+        "tag_1": "DOG_RULES",
+        "tag_2": "BEACH",
+        "tag_3": "TIME_RESTRICTIONS"
+      }
+    },
+    {
+      "doc_id": "san_diego_balboa_park_walk",
+      "text": "Balboa Park offers wide promenades, gardens, and cultural buildings ideal for relaxed strolling. Parking is spread across multiple lots. Dogs are allowed on-leash in outdoor areas but not inside museums.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Balboa Park Garden Walks",
+        "city": "San Diego",
+        "tags_csv": "GARDENS,DOG_FRIENDLY,EASY_WALK,PARKING",
+        "tag_1": "GARDENS",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "EASY_WALK",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "san_diego_la_jolla_cove_views",
+      "text": "La Jolla Cove is known for scenic coastal views and sea lions. Parking is extremely limited; arrive early or park farther away and walk. Dogs are generally not allowed on the beach but may be allowed on surrounding sidewalks.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "La Jolla Cove Beach Pet Restriction",
+        "city": "San Diego",
+        "tags_csv": "COAST,DOG_RULES,PARKING,SEA_LIONS",
+        "tag_1": "COAST",
+        "tag_2": "DOG_RULES",
+        "tag_3": "PARKING",
+        "tag_4": "SEA_LIONS"
+      }
+    },
+    {
+      "doc_id": "san_diego_sunset_cliffs_walk",
+      "text": "Sunset Cliffs Natural Park offers dramatic ocean views and clifftop walking paths. Parking along residential streets is limited at sunset. Dogs are allowed on-leash on many paths.",
+      "metadata": {
+        "type": "TRAIL",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Sunset Cliffs Coastal Walk",
+        "city": "San Diego",
+        "tags_csv": "SUNSET,COAST,DOG_FRIENDLY,PARKING",
+        "tag_1": "SUNSET",
+        "tag_2": "COAST",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "palm_springs_indian_canyons_rule",
+      "text": "Indian Canyons near Palm Springs feature desert hikes with seasonal water, but dogs are not allowed on most trails. Heat can be extreme even in shoulder seasons; plan early mornings.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "Indian Canyons Dog Restriction + Heat Rule",
+        "city": "Palm Springs",
+        "tags_csv": "DESERT,DOG_RULES,HEAT,TREKKING",
+        "tag_1": "DESERT",
+        "tag_2": "DOG_RULES",
+        "tag_3": "HEAT",
+        "tag_4": "TREKKING"
+      }
+    },
+    {
+      "doc_id": "joshua_tree_viewpoints_winter",
+      "text": "Joshua Tree National Park is best explored via short walks and viewpoints if avoiding long hikes. Winter offers cooler temps, but nights are cold. Dogs are restricted to paved areas and campgrounds only.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "Joshua Tree Winter + Pet Restrictions",
+        "city": "Joshua Tree",
+        "tags_csv": "DESERT,WINTER,DOG_RULES,VIEWPOINTS",
+        "tag_1": "DESERT",
+        "tag_2": "WINTER",
+        "tag_3": "DOG_RULES",
+        "tag_4": "VIEWPOINTS"
+      }
+    },
+    {
+      "doc_id": "ojai_downtown_evening_stroll",
+      "text": "Ojai has a relaxed, small-town vibe with mountain views and a cozy downtown strip. Parking is generally easy compared to coastal cities. Dogs are welcome outdoors and on many patios.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Ojai Downtown Evening Stroll",
+        "city": "Ojai",
+        "tags_csv": "COZY,SMALL_TOWN,DOG_FRIENDLY,PARKING",
+        "tag_1": "COZY",
+        "tag_2": "SMALL_TOWN",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "santa_barbara_waterfront_walk",
+      "text": "Santa Barbara’s waterfront path offers flat walking with ocean views and palm-lined scenery. Parking lots and street parking are available near the harbor. Dogs are allowed on-leash along the path but restricted on some beaches.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Santa Barbara Waterfront Walk",
+        "city": "Santa Barbara",
+        "tags_csv": "WATERFRONT,DOG_FRIENDLY,EASY_WALK,PARKING",
+        "tag_1": "WATERFRONT",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "EASY_WALK",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "santa_barbara_mission_gardens_rule",
+      "text": "Santa Barbara Mission grounds are beautiful and historic, but pets are often restricted in garden areas. Check current rules before bringing a dog.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "Santa Barbara Mission Pet Restriction",
+        "city": "Santa Barbara",
+        "tags_csv": "HISTORIC,DOG_RULES,GARDENS",
+        "tag_1": "HISTORIC",
+        "tag_2": "DOG_RULES",
+        "tag_3": "GARDENS"
+      }
+    },
+    {
+      "doc_id": "orange_county_crystal_cove_viewpoints",
+      "text": "Crystal Cove State Park has scenic coastal viewpoints and limited easy-access areas. Parking is available via paid lots and shuttle systems. Dogs are generally not allowed on trails or beaches.",
+      "metadata": {
+        "type": "RULE",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": false,
+        "title": "Crystal Cove Pet Restrictions",
+        "city": "Orange County",
+        "tags_csv": "COAST,DOG_RULES,STATE_PARK",
+        "tag_1": "COAST",
+        "tag_2": "DOG_RULES",
+        "tag_3": "STATE_PARK"
+      }
+    },
+    {
+      "doc_id": "long_beach_shoreline_path",
+      "text": "The Long Beach Shoreline Path is flat and ideal for relaxed walks with skyline and ocean views. Parking is available near the marina and downtown areas. Dogs are allowed on-leash on the path.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Long Beach Shoreline Walk",
+        "city": "Long Beach",
+        "tags_csv": "FLAT_WALK,DOG_FRIENDLY,WATERFRONT,PARKING",
+        "tag_1": "FLAT_WALK",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "WATERFRONT",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "pasadena_old_town_evening",
+      "text": "Old Town Pasadena offers lively streets, dining, and evening strolls with easier parking than central LA. Public garages are common. Dogs are welcome outdoors on-leash.",
+      "metadata": {
+        "type": "POI",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Old Town Pasadena Evening Walk",
+        "city": "Pasadena",
+        "tags_csv": "EVENING,DOG_FRIENDLY,FOOD,PARKING",
+        "tag_1": "EVENING",
+        "tag_2": "DOG_FRIENDLY",
+        "tag_3": "FOOD",
+        "tag_4": "PARKING"
+      }
+    },
+    {
+      "doc_id": "temecula_old_town_holiday",
+      "text": "Old Town Temecula has a festive small-town feel with lights, shops, and dining. Parking is generally available in public lots. Dogs are welcome outdoors, but wineries vary in pet policy.",
+      "metadata": {
+        "type": "EVENT",
+        "region_code": "SOUTHERN_CA",
+        "pet_friendly": true,
+        "title": "Old Town Temecula Holiday Stroll",
+        "city": "Temecula",
+        "tags_csv": "HOLIDAY,SMALL_TOWN,DOG_FRIENDLY,PARKING",
+        "tag_1": "HOLIDAY",
+        "tag_2": "SMALL_TOWN",
+        "tag_3": "DOG_FRIENDLY",
+        "tag_4": "PARKING"
+      }
+    }
+  ]
+}

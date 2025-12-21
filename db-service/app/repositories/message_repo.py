@@ -25,7 +25,7 @@ class MessageRepository:
         return (
             self.db.query(Message)
             .filter(Message.thread_id == thread_id)
-            .order_by(Message.created_at)
+            .order_by(Message.created_at.desc(), Message.id.desc())
             .offset(skip)
             .limit(limit)
             .all()
@@ -42,7 +42,7 @@ class MessageRepository:
     def get_all(self, skip: int = 0, limit: int = 100) -> list[Message]:
         return (
             self.db.query(Message)
-            .order_by(Message.created_at)
+            .order_by(Message.created_at.desc(), Message.id.desc())
             .offset(skip)
             .limit(limit)
             .all()

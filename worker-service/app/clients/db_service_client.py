@@ -156,3 +156,32 @@ class DBServiceClient:
         resp.raise_for_status()
         data = resp.json()
         return data.get("results", [])
+
+    async def query_travel_docs(
+        self,
+        *,
+        query_text: str,
+        top_k: int = 8,
+        region_code: Optional[str] = None,
+        pet_friendly: Optional[bool] = None,
+        doc_type: Optional[str] = None,
+    ) -> List[Dict[str, any]]:
+        """
+        Call db-service /vdb/travel-docs/search and return the 'results' list.
+
+        Maps to:
+          GET /vdb/travel-docs/search?query=...&top_k=...&region_code=...&pet_friendly=...&doc_type=...
+        """
+        params: Dict[str, any] = {"query": query_text, "top_k": top_k}
+        if region_code:
+            params["region_code"] = region_code
+        if pet_friendly is not None:
+            params["pet_friendly"] = pet_friendly
+        if doc_type:
+            params["doc_type"] = doc_type
+
+        resp = await self.client.get("/vdb/travel-docs/search", params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("results", [])
+

@@ -277,6 +277,109 @@ class VectorDBClient:
         deleted = await asyncio.to_thread(_delete_thread)
         logger.info("VDB: deleted %s memories for thread_id=%s", deleted, thread_id)
         return deleted
+    
+    # -------------------------------------------------------------------------
+    # Travel docs (curated RAG)
+    # -------------------------------------------------------------------------
+
+    async def upsert_travel_doc(
+        self,
+        *,
+        doc_id: str,
+        text: str,
+        metadata: Dict[str, Any],
+    ) -> None:
+        if not text or not doc_id:
+            return
+
+        meta = dict(metadata or {})
+        meta.setdefault("doc_id", doc_id)
+        meta.setdefault("source", "curated")
+
+        logger.info("VDB upsert_travel_doc: doc_id=%s", doc_id)
+
+        def _upsert():
+            try:
+                self.store.delete(ids=[doc_id])
+            except Exception:
+                pass
+            doc = Document(page_content=text, metadata=meta)
+            self.store.add_documents([doc], ids=[doc_id])
+
+        await asyncio.to_thread(_upsert)
+
+    async def bulk_upsert_travel_docs(
+        self,
+        *,
+        docs: List[Dict[str, Any]],
+    ) -> int:
+        """
+        docs: [{ "doc_id": str, "text": str, "metadata": {...} }, ...]
+        """
+        chroma_docs: List[Document] = []
+        ids: List[str] = []
+
+        for d in docs:
+            doc_id = d.get("doc_id") or d.get("id")
+            text = d.get("text") or ""
+            meta = d.get("metadata") or {}
+            if not doc_id or not text:
+                continue
+
+            meta = dict(meta)
+            meta.setdefault("doc_id", doc_id)
+            meta.setdefault("source", "curated")
+
+            chroma_docs.append(Document(page_content=text, metadata=meta))
+            ids.append(doc_id)
+
+        if not chroma_docs:
+            return 0
+
+        logger.info("VDB bulk_upsert_travel_docs: count=%s", len(chroma_docs))
+
+        def _bulk():
+            try:
+                self.store.delete(ids=ids)
+            except Exception:
+                pass
+            self.store.add_documents(chroma_docs, ids=ids)
+
+        await asyncio.to_thread(_bulk)
+        return len(chroma_docs)
+
+    async def query_travel_docs(
+        self,
+        *,
+        query_text: str,
+        top_k: int = 8,
+        where: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        if not query_text:
+            return []
+
+        logger.info(
+            "VDB query_travel_docs: top_k=%s where=%s query=%s",
+            top_k,
+            where,
+            query_text[:120],
+        )
+
+        def _search():
+            return self.store.similarity_search_with_relevance_scores(
+                query_text,
+                k=top_k,
+                filter=where if where else None,
+            )
+
+        results = await asyncio.to_thread(_search)
+
+        out: List[Dict[str, Any]] = []
+        for doc, score in results:
+            out.append({"text": doc.page_content, "metadata": doc.metadata, "score": float(score)})
+        return out
+
+    
 
     async def close(self) -> None:
         """
@@ -284,3 +387,6 @@ class VectorDBClient:
         but we keep this for API symmetry.
         """
         pass
+
+
+

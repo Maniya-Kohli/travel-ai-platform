@@ -49,7 +49,7 @@ class NormalisedMessageRepository:
         return (
             self.db.query(Normalised_Message)
             .filter(Normalised_Message.thread_id == thread_id)
-            .order_by(Normalised_Message.created_at)
+            .order_by(Normalised_Message.created_at.desc(), Normalised_Message.id.desc())
             .offset(skip)
             .limit(limit)
             .all()
@@ -67,7 +67,7 @@ class NormalisedMessageRepository:
     def get_all(self, skip: int = 0, limit: int = 100) -> list[Normalised_Message]:
         return (
             self.db.query(Normalised_Message)
-            .order_by(Normalised_Message.created_at)
+            .order_by(Normalised_Message.created_at.desc(), Normalised_Message.id.desc())
             .offset(skip)
             .limit(limit)
             .all()

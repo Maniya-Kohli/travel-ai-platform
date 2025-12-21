@@ -17,6 +17,8 @@ from app.routes.message_routes import router as message_routes
 from app.routes.normalised_message_routes import router as normalised_message_routes
 from app.routes.vectordb_routes import router as vectordb_routes
 from platform_common.logging_config import init_logging
+from app.routes.seed_routes import router as seed_router
+
 
 
 # 🔧 Optional debugpy attach (controlled by env vars)
@@ -69,6 +71,8 @@ app.include_router(thread_routes)
 app.include_router(message_routes)
 app.include_router(normalised_message_routes)
 app.include_router(vectordb_routes)
+app.include_router(seed_router)
+
 
 
 @app.on_event("startup")

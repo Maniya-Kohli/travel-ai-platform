@@ -120,6 +120,7 @@ class ContextManager:
                     }
                     logger.debug("CTX: recent message=%s", rec)
                     recent.append(rec)
+                    
             except Exception as e:
                 logger.exception("CTX: error fetching thread messages: %s", e)
                 recent = []

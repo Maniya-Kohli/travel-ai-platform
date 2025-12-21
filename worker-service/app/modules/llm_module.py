@@ -375,6 +375,7 @@ class LLMModule:
             max_memories=4,
         )
 
+        retrieved = grounded_context.get("retrieved_data") or {}
         # small, focused JSON blobs for the LLM
         llm_input = {
             "context_pack": {
@@ -390,10 +391,14 @@ class LLMModule:
                 "last_user_message": context_pack.get("last_user_message"),
             },
             "grounded_context": {
-                "pois": grounded_context.get("pois", []),
-                "lodging": grounded_context.get("lodging", []),
-                "weather": grounded_context.get("weather", {}),
-            },
+            "curated_docs": retrieved.get("curated_docs", []),
+            "events": retrieved.get("events", []),
+            "pois": retrieved.get("pois", []),
+            "rules": retrieved.get("rules", []),
+            "lodging": retrieved.get("lodging", []),
+            "weather": retrieved.get("weather", None),
+            "rag_debug": retrieved.get("rag_debug", {}),
+        },
             # Normalized filters for the model to apply strictly
             "filters": normalized_filters,
             # Extra plain-text views that are easy for the LLM to digest
@@ -514,9 +519,11 @@ class LLMModule:
         )
 
         # RAG outputs
-        pois: List[Dict[str, Any]] = grounded_context.get("pois") or []
-        lodging: List[Dict[str, Any]] = grounded_context.get("lodging") or []
-        weather: Dict[str, Any] = grounded_context.get("weather") or {}
+        retrieved = grounded_context.get("retrieved_data") or {}
+        pois: List[Dict[str, Any]] = retrieved.get("pois") or []
+        lodging: List[Dict[str, Any]] = retrieved.get("lodging") or []
+        weather = retrieved.get("weather") or {}
+
 
         logger.info(
             "LLMModule._rule_based_plan: destination=%s days=%s pois=%d lodging=%d",
