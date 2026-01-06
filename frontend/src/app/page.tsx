@@ -1,5 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm"; // For tables, strikethrough, etc.
 
 // ---------------- Types ----------------
 
@@ -128,7 +130,7 @@ function summarizeTripPlan(plan: TripPlan) {
                   return (
                     <div key={aIdx}>
                       {a.name}
-                      {a.description ? `: ${a.description}` : ""}
+                      {a.description ? <Md>{a.description}</Md> : null}
                     </div>
                   );
                 })}
@@ -149,7 +151,7 @@ function summarizeTripPlan(plan: TripPlan) {
           )}
           {lodging.notes && (
             <>
-              {lodging.notes}
+              <Md>{lodging.notes}</Md>
               <br />
             </>
           )}
@@ -158,7 +160,7 @@ function summarizeTripPlan(plan: TripPlan) {
 
       {plan.weather_hint && (
         <>
-          {plan.weather_hint}
+          <Md>{plan.weather_hint}</Md>
           <br />
         </>
       )}
@@ -1324,7 +1326,6 @@ export default function HomePage() {
                         ? "16px 18px"
                         : "11px 15px",
                     fontSize: "0.97rem",
-                    whiteSpace: "pre-line",
                     wordBreak: "break-word",
                     boxShadow:
                       msg.sender === "assistant"
@@ -1336,11 +1337,14 @@ export default function HomePage() {
                         : "1px solid rgba(255,255,255,0.04)",
                   }}
                 >
+                  {/* THIS IS THE ONLY CONTENT BLOCK — NOTHING ELSE! */}
                   {msg.kind === "trip_plan" && msg.sender === "assistant" ? (
                     <div style={{ whiteSpace: "pre-line" }}>
-                      <div style={{ marginBottom: "1em" }}>
-                        {msg.plan.intro_text || ""}
-                      </div>
+                      {msg.plan.intro_text && (
+                        <div style={{ marginBottom: "1em" }}>
+                          <Md>{msg.plan.intro_text}</Md>
+                        </div>
+                      )}
                       {summarizeTripPlan(msg.plan)}
                       {msg.plan.closing_tips && (
                         <div
@@ -1350,12 +1354,16 @@ export default function HomePage() {
                             opacity: 0.8,
                           }}
                         >
-                          {msg.plan.closing_tips}
+                          <Md>{msg.plan.closing_tips}</Md>
                         </div>
                       )}
                     </div>
                   ) : (
-                    (msg as any).text
+                    <div className="markdown">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {(msg as any).text}
+                      </ReactMarkdown>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1472,6 +1480,14 @@ export default function HomePage() {
           </form>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Md({ children }: { children: string }) {
+  return (
+    <div className="markdown">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   );
 }

@@ -209,11 +209,15 @@ class LLMModule:
                 self._gemini_model = genai.GenerativeModel(
                     model_name,
                     system_instruction=(
-                        "You are TravelBot, an expert travel itinerary planner and friendly chat assistant. "
-                        "You ALWAYS respond with a single valid JSON object. "
-                        "Inside the JSON values, use conversational, natural language as if talking directly to the traveler. "
-                        "For summaries, day titles, activity descriptions, and weather hints, write in complete sentences, not lists or fragments."
-                    ),
+  "You are Cali-Trip-Pro , TravelBot, an expert travel itinerary planner and friendly chat assistant. "
+  "You ALWAYS respond with a single valid JSON object. "
+  "Inside the JSON values, use conversational, natural language as if talking directly to the traveler. "
+  "For summaries, day titles, activity descriptions, and weather hints, write in complete sentences, not lists or fragments. "
+  "Use context_pack.last_user_message and context_pack.recent_messages_text to understand the latest request, "
+  "but treat context_pack.geoscope and context_pack.time (and filters.duration_days) as the authoritative structured trip state when present. "
+  "If duration and destination are known, output a concrete itinerary with specific things to do, not generic placeholders."
+)
+
                 )
                 self.use_gemini = True
                 logger.info(
@@ -397,7 +401,7 @@ class LLMModule:
             "rules": retrieved.get("rules", []),
             "lodging": retrieved.get("lodging", []),
             "weather": retrieved.get("weather", None),
-            "rag_debug": retrieved.get("rag_debug", {}),
+            # "rag_debug": retrieved.get("rag_debug", {}),
         },
             # Normalized filters for the model to apply strictly
             "filters": normalized_filters,
@@ -439,19 +443,19 @@ class LLMModule:
 
                 trip_plan: Dict[str, Any]
 
-                # Case 1: wrapper object { "reply": { ...trip_plan... } }
-                if isinstance(parsed, dict) and "reply" in parsed:
-                    trip_plan = parsed["reply"]
-
-                # Case 2: bare trip_plan object { "type": "trip_plan", ... }
-                elif isinstance(parsed, dict) and parsed.get("type") == "trip_plan":
-                    trip_plan = parsed
-
+                if isinstance(parsed, dict):
+                    # If it has the structure of a trip plan, use it regardless of "type"
+                    if any(key in parsed for key in ["itinerary", "days", "destination", "intro_text"]):
+                        trip_plan = parsed
+                        trip_plan["type"] = "trip_plan"  # normalize for frontend
+                        trip_plan.setdefault("version", "v1")
+                    elif "reply" in parsed:
+                        trip_plan = parsed["reply"]
+                        trip_plan["type"] = "trip_plan"  # ensure consistency
+                    else:
+                        raise RuntimeError("LLM response did not contain recognizable trip_plan structure")
                 else:
-                    raise RuntimeError(
-                        "LLM response did not contain a valid trip_plan "
-                        "(no 'reply' and no top-level type=='trip_plan')"
-                    )
+                    raise RuntimeError("LLM response was not a JSON object")
 
             except json.JSONDecodeError as e:
                 raise RuntimeError(
