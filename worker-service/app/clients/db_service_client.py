@@ -3,7 +3,7 @@ DB Service Client
 HTTP client for calling DB Service API endpoints
 """
 import httpx
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from app.config import get_settings
 import logging
 
@@ -123,6 +123,7 @@ class DBServiceClient:
         message_id: str,
         text: str,
         role: str,
+        embedding: list[float],              # ✅ required now
         extra_meta: Optional[Dict[str, any]] = None,
     ) -> None:
         payload = {
@@ -130,26 +131,25 @@ class DBServiceClient:
             "message_id": message_id,
             "text": text,
             "role": role,
+            "embedding": embedding,          # ✅ add this
             "extra_meta": extra_meta or {},
         }
         resp = await self.client.post("/vdb/memories", json=payload)
         resp.raise_for_status()
 
+
     async def query_memories(
         self,
         *,
         thread_id: str,
-        query_text: str,
+        query_embedding: List[float],   # ✅ change
         top_k: int = 5,
     ) -> List[Dict[str, any]]:
-        """
-        Call db-service /vdb/memories/search and return the 'results' list.
-        """
-        resp = await self.client.get(
+        resp = await self.client.post(
             "/vdb/memories/search",
-            params={
+            json={
                 "thread_id": thread_id,
-                "query": query_text,
+                "query_embedding": query_embedding,
                 "top_k": top_k,
             },
         )
@@ -157,31 +157,40 @@ class DBServiceClient:
         data = resp.json()
         return data.get("results", [])
 
+
+
     async def query_travel_docs(
         self,
         *,
-        query_text: str,
+        query_embedding: Optional[List[float]] = None,
+        query: Optional[str] = None,
         top_k: int = 8,
         region_code: Optional[str] = None,
         pet_friendly: Optional[bool] = None,
         doc_type: Optional[str] = None,
-    ) -> List[Dict[str, any]]:
-        """
-        Call db-service /vdb/travel-docs/search and return the 'results' list.
+    ) -> List[Dict[str, Any]]:
 
-        Maps to:
-          GET /vdb/travel-docs/search?query=...&top_k=...&region_code=...&pet_friendly=...&doc_type=...
-        """
-        params: Dict[str, any] = {"query": query_text, "top_k": top_k}
+        if not query_embedding and not query:
+            return []
+
+        payload: Dict[str, Any] = {"top_k": top_k}
+
+        # send ONE of these (prefer embedding if provided)
+        if query_embedding:
+            payload["query_embedding"] = query_embedding
+        else:
+            payload["query_text"] = query  # or "query" depending on your FastAPI model
+
         if region_code:
-            params["region_code"] = region_code
+            payload["region_code"] = region_code
         if pet_friendly is not None:
-            params["pet_friendly"] = pet_friendly
+            payload["pet_friendly"] = pet_friendly
         if doc_type:
-            params["doc_type"] = doc_type
+            payload["doc_type"] = doc_type
 
-        resp = await self.client.get("/vdb/travel-docs/search", params=params)
+        resp = await self.client.post("/vdb/travel-docs/search", json=payload)
         resp.raise_for_status()
         data = resp.json()
         return data.get("results", [])
+
 

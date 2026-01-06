@@ -20,4 +20,6 @@ google-generativeai==0.8.5
 
 debugpy
 
+langchain_huggingface
+
 

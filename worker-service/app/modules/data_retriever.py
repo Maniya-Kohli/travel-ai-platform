@@ -1,6 +1,6 @@
 # app/modules/data_retriever.py
 from __future__ import annotations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
 import logging
 
 from app.clients.db_service_client import DBServiceClient
@@ -28,9 +28,10 @@ class DataRetriever:
       }
     """
 
-    def __init__(self) -> None:
+    def __init__(self , embed_fn: Callable[[str], Any]) -> None:
         logger.info("DR: DataRetriever initialized (curated RAG only)")
         self.db_client = DBServiceClient()
+        self.embed_fn = embed_fn  # ✅ store embed function
 
     async def retrieve(self, context_pack: Dict[str, Any]) -> Dict[str, Any]:
         thread_id = context_pack.get("thread_id")
@@ -79,12 +80,13 @@ class DataRetriever:
         logger.info("DR: curated RAG filters region_code=%s pet_required=%s", region_code, pet_required)
 
         try:
-            curated_docs: List[Dict[str, Any]] = await self.db_client.query_travel_docs(
-                query_text=query_text,
+            query_embedding = await self.embed_fn(query_text)
+
+            curated_docs = await self.db_client.query_travel_docs(
+                query_embedding=query_embedding,
                 top_k=12,
                 region_code=region_code,
-                pet_friendly=True if pet_required else None,  # apply only if required
-                doc_type=None,
+                pet_friendly=pet_required,
             )
         except Exception:
             logger.exception("DR: curated travel_docs query failed")

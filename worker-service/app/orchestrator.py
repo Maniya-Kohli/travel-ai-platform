@@ -12,7 +12,7 @@ class TripOrchestrator:
     def __init__(self):
         self.request_handler = RequestHandler()
         self.context_manager = ContextManager()
-        self.data_retriever = DataRetriever()
+        self.data_retriever = DataRetriever(self.context_manager._embed)
         self.filter_engine = FilterEngine()
         self.llm_module = LLMModule()
         self.db_client = DBServiceClient()

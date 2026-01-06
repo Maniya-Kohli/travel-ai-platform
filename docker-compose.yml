@@ -69,20 +69,19 @@ services:
   # DB Service - Database Access Layer
   db-service:
     build:
-      context: . # monorepo root
+      context: .
       dockerfile: db-service/Dockerfile
     container_name: travel-ai-db
     ports:
       - "8001:8001"
-      - "5679:5679" # 👈 db-service debug port
+      - "5679:5679"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/travel_ai
+      - DATABASE_URL=${DATABASE_URL}
       - SERVICE_PORT=8001
       - ENVIRONMENT=development
-      - VECTOR_PERSIST_DIR=/data/chroma
       - PYTHONUNBUFFERED=1
       - LOG_LEVEL=DEBUG
-      - ENABLE_DEBUGPY=1 # 👈 enable debugpy in db-service main
+      - ENABLE_DEBUGPY=1
       - DEBUGPY_PORT=5679
     depends_on:
       postgres:

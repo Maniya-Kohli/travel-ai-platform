@@ -10,6 +10,9 @@ from copy import deepcopy
 from app.config import get_settings
 from app.clients.db_service_client import DBServiceClient
 
+from langchain_huggingface import HuggingFaceEmbeddings
+import os
+
 logger = logging.getLogger(__name__)
 S = get_settings()
 
@@ -305,6 +308,11 @@ class ContextManager:
     def __init__(self):
         self.db = DBServiceClient()
 
+        # Embeddings live in the WORKER (not db-service)
+        model_name = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+        self.embedder = HuggingFaceEmbeddings(model_name=model_name)
+        logger.info("CTX: using embedding model=%s", model_name)
+
     async def build_context(self, normalized_message: Any) -> Dict[str, Any]:
         nm = to_dict(normalized_message)
         thread_id = nm.get("thread_id")
@@ -473,21 +481,24 @@ class ContextManager:
 
         try:
             if thread_id and last_user and last_user.get("message_id") and last_user.get("text"):
+                emb = await self._embed(last_user["text"])
                 await self.db.upsert_memory(
                     thread_id=thread_id,
                     message_id=last_user["message_id"],
                     text=last_user["text"],
                     role="user",
-                    extra_meta={"source": "db-service"},
+                    embedding=emb,  # ✅ REQUIRED NOW
+                    extra_meta={"source": "worker"},
                 )
         except Exception as e:
             logger.exception("CTX: VDB upsert failed: %s", e)
 
         query_text = (last_user.get("text") if last_user else None) or window_summary
         try:
+            qemb = await self._embed(query_text)
             long_term_memories = await self.db.query_memories(
                 thread_id=thread_id,
-                query_text=query_text,
+                query_embedding=qemb,  # ✅
                 top_k=6,
             )
             for m in long_term_memories:
@@ -641,19 +652,26 @@ class ContextManager:
             summary_parts.append(f"travel by {travel_modes}")
 
         days = time_block.get("days")
+
+        # normalize days into an int if possible
+        try:
+            if days is not None and days != "":
+                days_int = int(days)  # handles "3", 3.0, Decimal("3")
+            else:
+                days_int = None
+        except (TypeError, ValueError):
+            days_int = None
+
         start = time_block.get("start")
         end = time_block.get("end")
         season_hint = time_block.get("season_hint")
 
-        if isinstance(days, int) and days > 0:
-            summary_parts.append(f"{days}-day trip")
+        if days_int and days_int > 0:
+            summary_parts.append(f"{days_int}-day trip")
         elif start and end:
             summary_parts.append(f"dates {start} \u2192 {end}")
         else:
             summary_parts.append("duration not specified")
-
-        if season_hint:
-            summary_parts.append(f"season: {season_hint}")
 
         window_summary = ("Recent focus: " + "; ".join(summary_parts) + ".") if summary_parts else ""
 
@@ -665,3 +683,9 @@ class ContextManager:
                 window_summary = f"Last user: {preview}..."
 
         return window_summary
+    
+    async def _embed(self, text: str) -> List[float]:
+        # HuggingFaceEmbeddings is sync; run in thread
+        import asyncio
+        return await asyncio.to_thread(self.embedder.embed_query, text)
+
